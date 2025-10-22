@@ -1,6 +1,5 @@
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
 
 def format_report(analysis: dict, incident_name: str, console: Console):
     """Format and display the analysis report using Rich formatting"""
