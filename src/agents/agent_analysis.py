@@ -16,5 +16,8 @@ class AnalysisAgent:
         # Parse JSON response
         analysis = self.client.extract_json_from_response(response)
 
+        # Assert that we received a dict (not a list)
+        assert isinstance(analysis, dict), f"Expected dict for analysis, got {type(analysis).__name__}"
+
         # Return analysis dict
         return analysis
