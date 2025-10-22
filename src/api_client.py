@@ -1,9 +1,9 @@
-import os
 import time
 import re
 import json
-from typing import Optional
+from typing import Union, Optional
 from anthropic import Anthropic
+from anthropic.types import TextBlock
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -27,6 +27,8 @@ class ClaudeClient:
         user_prompt: str,
         max_retries: int = 3
     ) -> str:
+        last_error: Optional[Exception] = None
+
         for attempt in range(max_retries):
             try:
                 response = self.client.messages.create(
@@ -38,21 +40,26 @@ class ClaudeClient:
                         {"role": "user", "content": user_prompt}
                     ]
                 )
-                return response.content[0].text
+                # Assert first content block is TextBlock and extract text
+                content_block = response.content[0]
+                assert isinstance(content_block, TextBlock), f"Expected TextBlock, got {type(content_block).__name__}"
+                return content_block.text
             except Exception as e:
+                last_error = e
                 if attempt < max_retries - 1:
                     wait_time = 2 ** attempt # exponential backoff: 1s, 2s, 4s
                     time.sleep(wait_time)
-                else:
-                    raise Exception(f"Failed after {max_retries} attempts: {e}")
+
+        # If we've exhausted all retries, raise the last error
+        raise Exception(f"Failed after {max_retries} attempts: {last_error}")
             
-    def extract_json_from_response(self, response_text: str) -> dict:
-        
+    def extract_json_from_response(self, response_text: str) -> Union[dict, list]:
         # Try different patterns in order of preference
         patterns = [
-            r'```json\s*(.*?)\s*```',  # Markdown code block
+            r'```json\s*(.*?)\s*```',  # Markdown code block with json tag
             r'```\s*(.*?)\s*```',      # Generic code block
-            r'\{.*\}',                 # Just the JSON object
+            r'\{.*\}',                 # JSON object - Check objects before arrays
+            r'\[.*\]',                 # JSON array
         ]
         
         for pattern in patterns:
@@ -63,5 +70,9 @@ class ClaudeClient:
                     return json.loads(json_str)
                 except json.JSONDecodeError:
                     continue
-        
-        raise ValueError("No valid JSON found in response")
+
+        # Include the actual response in the error for debugging
+        raise ValueError(
+            f"No valid JSON found in response.\n"
+            f"Response text (first 500 chars):\n{response_text[:500]}"
+        )

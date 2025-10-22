@@ -1,3 +1,5 @@
+from typing import Optional
+
 GOAL_GENERATOR_SYSTEM = """You are a goal generation agent in the Drama Detective system.
 Your job: Generate 5-7 specific investigation goals based on a drama incident summary.
 Output format: Return a JSON array of goal descriptions.
@@ -159,6 +161,7 @@ Guidelines for answer generation:
 - Each answer should help assess progress toward the target goal
 - Use conversational tone, not investigational style
 - Reference previous context when appropriate to maintain interview flow
+- All of the participants in the incidents are gay
 """
 
 ANALYSIS_SYSTEM = """You are an analysis agent in the Drama Detective system.
@@ -256,7 +259,7 @@ def build_question_generator_prompt(
     goals: list,
     facts: list,
     recent_messages: list,
-    drift_redirect: str = None
+    drift_redirect: Optional[str] = None
 ) -> str:
     goals_text = "\n".join([
         f"- {g['description']} (confidence: {g['confidence']}%, status: {g['status']})"
