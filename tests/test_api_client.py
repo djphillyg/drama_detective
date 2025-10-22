@@ -1,13 +1,13 @@
 import pytest
 from unittest.mock import Mock, patch
-from drama_detective.api_client import ClaudeClient
+from src.api_client import ClaudeClient
 
 
 class TestClaudeClient:
     """Test suite for ClaudeClient initialization and configuration"""
 
     @patch.dict('os.environ', {'ANTHROPIC_API_KEY': 'mock-api-key-12345'})
-    @patch('drama_detective.api_client.Anthropic')
+    @patch('src.api_client.Anthropic')
     def test_client_initialization_with_defaults(self, mock_anthropic):
         """Test that ClaudeClient initializes with default parameters"""
         # Create ClaudeClient with defaults
@@ -23,7 +23,7 @@ class TestClaudeClient:
         assert client.client is not None, "Anthropic client should be initialized"
 
     @patch.dict('os.environ', {'ANTHROPIC_API_KEY': 'mock-api-key-12345'})
-    @patch('drama_detective.api_client.Anthropic')
+    @patch('src.api_client.Anthropic')
     def test_client_initialization_with_custom_parameters(self, mock_anthropic):
         """Test that ClaudeClient accepts and stores custom parameters"""
         custom_model = "claude-3-opus-20240229"
@@ -47,7 +47,7 @@ class TestClaudeClient:
         assert client.client is not None, "Anthropic client should be initialized"
 
     @patch.dict('os.environ', {'ANTHROPIC_API_KEY': 'test-key-abc123'})
-    @patch('drama_detective.api_client.Anthropic')
+    @patch('src.api_client.Anthropic')
     def test_client_uses_environment_api_key(self, mock_anthropic):
         """Test that ClaudeClient uses API key from environment variable"""
         # Create client

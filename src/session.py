@@ -3,14 +3,16 @@ import uuid
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
-from drama_detective.models import Session, SessionStatus
+from src.models import Session, SessionStatus
 
 class SessionManager:
     def __init__(self, data_dir: Optional[Path] = None):
-        # set data_dir 
+        # set data_dir
         # create directory if it doesnt exist
         if data_dir is None:
-            self.data_dir = Path.home() / ".drama_detective" / ".sessions"
+            # Use project root directory (two levels up from this file)
+            project_root = Path(__file__).parent.parent
+            self.data_dir = project_root / ".drama" / ".sessions"
         else:
             self.data_dir = Path(data_dir)
         self.data_dir.mkdir(parents=True, exist_ok=True)
@@ -34,7 +36,6 @@ class SessionManager:
         filename = self.data_dir / f"{session.session_id}.json"
         with open(filename, 'w') as f:
             json.dump(session.model_dump(), f, indent=2)
-        return session
 
     def load_session(self, session_id: str) -> Session:
         # TODO: Load session from JSON file

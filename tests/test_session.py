@@ -2,8 +2,8 @@ import pytest
 import tempfile
 import time
 from pathlib import Path
-from drama_detective.session import SessionManager
-from drama_detective.models import Session, SessionStatus
+from src.session import SessionManager
+from src.models import Session, SessionStatus
 
 
 class TestSessionManager:

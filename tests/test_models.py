@@ -1,5 +1,5 @@
 import pytest
-from drama_detective.models import Goal, GoalStatus, Fact, Message, Session, SessionStatus
+from src.models import Goal, GoalStatus, Fact, Message, Session, SessionStatus
 from datetime import datetime
 
 def test_goal_creation():

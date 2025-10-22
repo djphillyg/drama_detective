@@ -5,7 +5,7 @@ from src.models import Goal, Fact, GoalStatus
 
 
 class GoalTrackerAgent:
-    def __init__(self, client: ClaudeClient = None):
+    def __init__(self, client: ClaudeClient):
         self.client = client
 
     def update_goals(self, goals: list[Goal], new_facts: list[Fact]) -> list[Goal]:
@@ -39,6 +39,9 @@ class GoalTrackerAgent:
 
         # Parse JSON response
         updates = self.client.extract_json_from_response(response)
+
+        # Assert that we received a list (not a dict)
+        assert isinstance(updates, list), f"Expected list of goal updates, got {type(updates).__name__}"
 
         # Create update map by goal description
         update_map = {update["goal"]: update for update in updates}
