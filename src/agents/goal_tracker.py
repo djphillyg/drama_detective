@@ -1,4 +1,3 @@
-import json
 from src.api_client import ClaudeClient
 from src.prompts import GOAL_TRACKER_SYSTEM, build_goal_tracker_prompt
 from src.models import Goal, Fact, GoalStatus
