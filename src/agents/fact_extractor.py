@@ -33,6 +33,16 @@ class FactExtractorAgent:
         # Parse JSON response
         cleaned_json = self.client.extract_json_from_response(response)
 
+        # Assert we received a list
+        assert isinstance(cleaned_json, list), f"Expected list of facts, got {type(cleaned_json).__name__}"
+
+        # Assert items in list are dicts, not strings
+        if cleaned_json:
+            assert isinstance(cleaned_json[0], dict), (
+                f"Expected list of fact objects (dicts), got list of {type(cleaned_json[0]).__name__}. "
+                f"First item: {cleaned_json[0]}"
+            )
+
         # Convert fact dicts to Fact objects
         list_facts: list[Fact] = [Fact(**o) for o in cleaned_json]
 
