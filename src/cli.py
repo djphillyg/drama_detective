@@ -119,31 +119,80 @@ def investigate(incident_name):
             analyze(session.session_id)
             break
         console.print(f"\n[bold]Next Question:[/bold] [cyan]{next_question}[/cyan]")
-    
-          
-          
-        
-        # TODO: Start interview loop:
-        # - Get user answer via console.input()
-        # - Handle quit/exit/stop commands (save as paused)
-        # - Validate answer not empty
-        # - Process answer through orchestrator
-        # - Save session after each turn
-        # - If complete, print completion message with analyze command
-        # - Print next question and continue loop
       
 
 @cli.command()
 def list():
-    # TODO: Print placeholder message "coming soon"
-    pass
+    """List all investigation sessions"""
+    # Create SessionManager
+    session_manager = SessionManager()
+
+    # Get all sessions
+    sessions = session_manager.list_sessions()
+
+    # If empty, print helpful message
+    if not sessions:
+        console.print("\n[yellow]No sessions found.[/yellow]")
+        console.print("[dim]Start a new investigation with:[/dim] [cyan]drama investigate <incident_name>[/cyan]")
+        return
+
+    # Create Rich Table with columns
+    table = Table(title="🕵️ Drama Detective Sessions", border_style="magenta")
+    table.add_column("ID", style="dim", no_wrap=True)
+    table.add_column("Incident", style="cyan")
+    table.add_column("Status", justify="center")
+    table.add_column("Progress", justify="right")
+    table.add_column("Created", style="dim")
+
+    # Add row for each session
+    for session in sessions:
+        # Format session ID (show first 8 chars)
+        session_id_short = session.session_id[:8]
+
+        # Color-code status
+        status_colors = {
+            "complete": "green",
+            "active": "yellow",
+            "paused": "blue"
+        }
+        status_color = status_colors.get(session.status.value, "white")
+        status_display = f"[{status_color}]{session.status.value.upper()}[/{status_color}]"
+
+        # Calculate average confidence from goals
+        if session.goals:
+            avg_confidence = sum(g.confidence for g in session.goals) / len(session.goals)
+            progress = f"{avg_confidence:.0f}%"
+        else:
+            progress = "0%"
+
+        # Format timestamp (just show date part for readability)
+        created_display = session.created_at.split("T")[0] if "T" in session.created_at else session.created_at[:10]
+
+        table.add_row(
+            session_id_short,
+            session.incident_name,
+            status_display,
+            progress,
+            created_display
+        )
+
+    # Print table
+    console.print("\n")
+    console.print(table)
+    console.print(f"\n[dim]Total sessions: {len(sessions)}[/dim]")
+    console.print("[dim]Resume a session with:[/dim] [cyan]drama resume <session_id>[/cyan]")
 
 
 @cli.command()
 @click.argument('session_id')
 def analyze(session_id):
-    # TODO: Print placeholder message with session_id
-    
+    # TODO: Create SessionManager
+    # Load session (handle FileNotFoundError)
+    # Print analyzing message
+    # Create AnalysisAgent
+    # Prepare session_data dict with model_dump()
+    # Generate analysis
+    # Format and display report using report_formatter
     pass
 
 
