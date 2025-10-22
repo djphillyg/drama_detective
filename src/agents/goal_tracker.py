@@ -1,0 +1,63 @@
+import json
+from src.api_client import ClaudeClient
+from src.prompts import GOAL_TRACKER_SYSTEM, build_goal_tracker_prompt
+from src.models import Goal, Fact, GoalStatus
+
+
+class GoalTrackerAgent:
+    def __init__(self, client: ClaudeClient = None):
+        self.client = client
+
+    def update_goals(self, goals: list[Goal], new_facts: list[Fact]) -> list[Goal]:
+        # Return unchanged goals if no new facts
+        if not new_facts:
+            return goals
+
+        # Convert goals and facts to dicts for prompt
+        goals_dicts = [
+            {
+                "description": g.description,
+                "confidence": g.confidence,
+                "status": g.status.value
+            }
+            for g in goals
+        ]
+        facts_dicts = [
+            {
+                "claim": f.claim,
+                "topic": f.topic,
+                "timestamp": f.timestamp
+            }
+            for f in new_facts
+        ]
+
+        # Build user prompt
+        user_prompt = build_goal_tracker_prompt(goals_dicts, facts_dicts)
+
+        # Call Claude API
+        response = self.client.call(GOAL_TRACKER_SYSTEM, user_prompt)
+
+        # Parse JSON response
+        updates = self.client.extract_json_from_response(response)
+
+        # Create update map by goal description
+        update_map = {update["goal"]: update for update in updates}
+
+        # Apply updates to each goal
+        updated_goals = []
+        for goal in goals:
+            if goal.description in update_map:
+                update = update_map[goal.description]
+                # Create updated goal with new confidence and status
+                updated_goal = Goal(
+                    description=goal.description,
+                    confidence=update["confidence"],
+                    status=GoalStatus(update["status"])
+                )
+                updated_goals.append(updated_goal)
+            else:
+                # Keep goal unchanged if no update found
+                updated_goals.append(goal)
+
+        # Return updated goals
+        return updated_goals

@@ -1,5 +1,7 @@
 import os
 import time
+import re
+import json
 from typing import Optional
 from anthropic import Anthropic
 from dotenv import load_dotenv
@@ -25,11 +27,6 @@ class ClaudeClient:
         user_prompt: str,
         max_retries: int = 3
     ) -> str:
-        # TODO: Call Claude API with retry logic
-        # - Try up to max_retries times
-        # - Use exponential backoff (2^attempt seconds)
-        # - Return response.content[0].text
-        # - Raise exception if all retries fail
         for attempt in range(max_retries):
             try:
                 response = self.client.messages.create(
@@ -48,3 +45,23 @@ class ClaudeClient:
                     time.sleep(wait_time)
                 else:
                     raise Exception(f"Failed after {max_retries} attempts: {e}")
+            
+    def extract_json_from_response(self, response_text: str) -> dict:
+        
+        # Try different patterns in order of preference
+        patterns = [
+            r'```json\s*(.*?)\s*```',  # Markdown code block
+            r'```\s*(.*?)\s*```',      # Generic code block
+            r'\{.*\}',                 # Just the JSON object
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, response_text, re.DOTALL)
+            if match:
+                json_str = match.group(1) if '```' in pattern else match.group(0)
+                try:
+                    return json.loads(json_str)
+                except json.JSONDecodeError:
+                    continue
+        
+        raise ValueError("No valid JSON found in response")

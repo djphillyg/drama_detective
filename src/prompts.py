@@ -93,57 +93,52 @@ Guidelines:
 - Consider both quantity and quality of information gathered
 """
 
-QUESTION_GENERATOR_SYSTEM = """You are a generation agent in the Drama Detective system.
-Your job: Generate the next best interview question based on investigation state
-Output format: Return JSON object with question and metadata.
+QUESTION_WITH_ANSWERS_SYSTEM = """You are a question and answer generation agent in the Drama Detective system.
+Your job: Generate the next best interview question based on investigation state, along with 4 multiple choice answer options.
+
+Output format: Return JSON object with question, metadata, and answer choices.
 
 Example output:
 {
-  "question": "You mentioned Sarah arrived late - what time exactly did she get there, and did she explain why?",
-  "target_goal": "Establish chronological timeline of events",
-  "reasoning": "Timeline has gaps, this addresses the lowest confidence goal"
+  "question": "Why did Lamar blow up about John taking Rob to Mexico?",
+  "target_goal": "Establish motive for Lamar's actions",
+  "reasoning": "Need to fully understand Rob's role in creating chaos amongst the group",
+  "answers": [
+    {
+      "answer": "Because Lamar just broke up with John and considers Rob a good friend that wouldn't do something like that",
+      "reasoning": "Establishes Lamar's motive for being upset about his good friend going with his ex to Mexico"
+    },
+    {
+      "answer": "Because Lamar is just a mean old nasty person",
+      "reasoning": "Establishes the subject is drifting from the goals and is perhaps feeding false information"
+    },
+    {
+      "answer": "Because Lamar is an anxious human being who doesn't handle situations with patience",
+      "reasoning": "Establishes the subject's familiarity with Lamar but unfamiliarity with motive"
+    },
+    {
+      "answer": "I don't know",
+      "reasoning": "Establishes that the subject doesn't know what happened, but can be trusted to answer more questions"
+    }
+  ]
 }
 
-Guidelines:
+Guidelines for question generation:
 - Prioritize goals with lowest confidence scores
 - Reference previous answers to create natural conversation flow
 - Ask one clear question at a time (not compound unless closely related)
 - Use conversational tone, not interrogation style
 - When drift was detected, incorporate the redirect suggestion
 - If all goals above 80% confidence, ask wrap-up question to end interview
-"""
 
-ANSWER_GENERATION_SYSTEM = f"""You are an answer generation agent in the Drama Detective system.
-Your job: When receiving the question to be asked by the system, produce four different options that elaborate on the intended goal of the question
-Example input:
-{
-"question": "Why did Lamar blow up about John taking Rob To Mexico?",
-"target_goal": "Establish motive for Lamar's actions",
-"reasoning": "Need to fully understand Rob's role in creating chaos amongst the group"
-}
-Example Output:
-[
-{
-    "answer": "Because Lamar just broke up with John and considers Rob a good friend that wouldn't do something like that",
-    "reasoning": "Establishes Lamar's motive for being upset about his good friend going with his ex to Mexico"
-},
-{
-    "answer": "Because Lamar is just a mean old nasty person",
-    "reasoning": "Establishes the subject's is drifting from the goals and is perhaps feeding false information"
-},
-{
-    "answer": "Because Lamar is an anxious human being who doesnt handle situations with patience",
-    "reasoning": "establishes the subject's familarity with Lamar but unfamiliarty with motive"
-},
-{
-    "answer": "I dont know",
-    "reasoning": "Establishes that the subject doesn't know what happened, but can be trusted to answer more questions"
-}
-]
-Guidelines:
-- Reference previous answers to create conversation flow
-- Have at least one red-herring question to determine whether or not the user is drifting or is giving false information
+Guidelines for answer generation:
+- Generate exactly 4 answer options that are plausible given the context
+- Include at least one answer that could reveal drift or false information (red herring)
+- Vary the quality/completeness of answers (e.g., detailed vs vague, accurate vs evasive)
+- Include one "I don't know" or similar uncertain answer
+- Each answer should help assess progress toward the target goal
 - Use conversational tone, not investigational style
+- Reference previous context when appropriate to maintain interview flow
 """
 
 ANALYSIS_SYSTEM = """You are an analysis agent in the Drama Detective system.
@@ -256,6 +251,40 @@ Recent conversation:
 {conversation_text}{drift_text}
 
 Generate the next best question to ask.
+Return only the JSON object, no additional text."""
+
+
+def build_question_with_answers_prompt(
+    goals: list,
+    facts: list,
+    recent_messages: list,
+    drift_redirect: str
+) -> str:
+    """Build prompt for merged question + answers generation."""
+    goals_text = "\n".join([
+        f"- {g['description']} (confidence: {g['confidence']}%, status: {g['status']})"
+        for g in goals
+    ])
+
+    facts_text = "\n".join([f"- {f['claim']}" for f in facts[-10:]])  # Last 10 facts
+
+    conversation_text = "\n".join([
+        f"{m['role'].upper()}: {m['content']}"
+        for m in recent_messages[-6:]  # Last 3 exchanges
+    ])
+
+    drift_text = f"\n\nIMPORTANT: Previous answer went off-track. Suggested redirect: {drift_redirect}" if drift_redirect else ""
+
+    return f"""Investigation goals:
+{goals_text}
+
+Facts gathered so far:
+{facts_text}
+
+Recent conversation:
+{conversation_text}{drift_text}
+
+Generate the next best question to ask along with 4 multiple choice answer options.
 Return only the JSON object, no additional text."""
 
 
