@@ -19,7 +19,6 @@ class Goal(BaseModel):
     def clamp_confidence(cls, v: int) -> int:
         return max(0, min(100, v))
 
-
 class Fact(BaseModel):
     topic: str
     claim: str
@@ -32,6 +31,11 @@ class Message(BaseModel):
     role: str  # "assistant" or "user"
     content: str
     timestamp: str
+
+
+class Answer(BaseModel):
+    answer: str
+    reasoning: str
 
 
 class SessionStatus(str, Enum):
@@ -49,5 +53,6 @@ class Session(BaseModel):
     goals: list[Goal] = Field(default_factory=list)
     messages: list[Message] = Field(default_factory=list)
     facts: list[Fact] = Field(default_factory=list)
+    answers: list[Answer] = Field(default_factory=list)
     current_question: str = ""
     turn_count: int = 0

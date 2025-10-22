@@ -14,7 +14,7 @@ class QuestionGeneratorAgent:
         goals: list[Goal],
         facts: list[Fact],
         messages: list[Message],
-        drift_redirect: str = None
+        drift_redirect: str = ""
     ) -> dict:
         # Calculate average confidence across goals
         avg_confidence = sum(g.confidence for g in goals) / len(goals) if goals else 0

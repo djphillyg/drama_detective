@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import Mock
 from src.agents.fact_extractor import FactExtractorAgent
 from src.api_client import ClaudeClient
-from src.models import Fact
+from src.models import Fact, Answer
 
 def test_extract_facts():
     # Create mock client
@@ -44,10 +44,13 @@ def test_extract_facts():
     # Create agent with mocked client
     agent = FactExtractorAgent(mock_client)
 
-    # Call extract_facts
+    # Call extract_facts with Answer object
     question = "What time did the party start and when did Sarah arrive?"
-    answer = "The party started at 5pm and Sarah got there around 5:30pm"
-    facts = agent.extract_facts(question, answer)
+    answer_obj = Answer(
+        answer="The party started at 5pm and Sarah got there around 5:30pm",
+        reasoning="Provides specific timeline information with certainty"
+    )
+    facts = agent.extract_facts(question, answer_obj)
 
     # Assert returns list of Fact objects with correct data
     assert len(facts) == 2
