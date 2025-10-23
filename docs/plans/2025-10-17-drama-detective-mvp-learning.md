@@ -77,7 +77,7 @@ Session = {session_id, incident_name, summary, goals[], facts[], messages[]}
 ### File Structure You'll Build
 
 ```
-drama_detective/
+src/
 ├── models.py              # Pydantic schemas (Goal, Fact, Session, etc.)
 ├── session.py             # Save/load JSON files
 ├── api_client.py          # Talk to Claude API with retry logic
@@ -114,7 +114,7 @@ This means you always know if something breaks!
 - Create: `setup.py`
 - Create: `.env.example`
 - Create: `.gitignore`
-- Create: `drama_detective/__init__.py`
+- Create: `src/__init__.py`
 
 **Step 1: Create requirements.txt**
 
@@ -181,12 +181,12 @@ dist/
 *.swo
 
 # Drama Detective data
-.drama_detective/
+.src/
 ```
 
 **Step 5: Create package init file**
 
-Create empty file: `drama_detective/__init__.py`
+Create empty file: `src/__init__.py`
 
 **Step 6: Install in development mode**
 
@@ -211,7 +211,7 @@ git commit -m "chore: initial project setup with dependencies"
 ## Task 2: Data Models and Pydantic Schemas
 
 **Files:**
-- Create: `drama_detective/models.py`
+- Create: `src/models.py`
 - Create: `tests/test_models.py`
 
 **Step 1: Write test for Goal model**
@@ -220,7 +220,7 @@ File: `tests/test_models.py`
 
 ```python
 import pytest
-from drama_detective.models import Goal, GoalStatus
+from src.models import Goal, GoalStatus
 
 def test_goal_creation():
     # TODO: Create a Goal with description, status, confidence
@@ -241,7 +241,7 @@ Expected: FAIL with import error
 
 **Step 3: Implement Goal model**
 
-File: `drama_detective/models.py`
+File: `src/models.py`
 
 ```python
 from enum import Enum
@@ -315,7 +315,7 @@ Expected: All tests PASS
 File: `tests/test_models.py` (append)
 
 ```python
-from drama_detective.models import Fact, Message, Session, SessionStatus
+from src.models import Fact, Message, Session, SessionStatus
 from datetime import datetime
 
 def test_fact_creation():
@@ -336,7 +336,7 @@ Expected: All tests PASS
 **Step 7: Commit**
 
 ```bash
-git add drama_detective/models.py tests/test_models.py
+git add src/models.py tests/test_models.py
 git commit -m "feat: add pydantic models for session state"
 ```
 
@@ -345,7 +345,7 @@ git commit -m "feat: add pydantic models for session state"
 ## Task 3: Session Manager
 
 **Files:**
-- Create: `drama_detective/session.py`
+- Create: `src/session.py`
 - Create: `tests/test_session.py`
 
 **Step 1: Write test for session creation**
@@ -357,8 +357,8 @@ import pytest
 import tempfile
 import shutil
 from pathlib import Path
-from drama_detective.session import SessionManager
-from drama_detective.models import SessionStatus
+from src.session import SessionManager
+from src.models import SessionStatus
 
 @pytest.fixture
 def temp_data_dir():
@@ -385,7 +385,7 @@ Expected: FAIL with import error
 
 **Step 3: Implement SessionManager**
 
-File: `drama_detective/session.py`
+File: `src/session.py`
 
 ```python
 import json
@@ -393,12 +393,12 @@ import uuid
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
-from drama_detective.models import Session, SessionStatus
+from src.models import Session, SessionStatus
 
 
 class SessionManager:
     def __init__(self, data_dir: Optional[Path] = None):
-        # TODO: Set data_dir (default: ~/.drama_detective/sessions)
+        # TODO: Set data_dir (default: ~/.src/sessions)
         # Create directory if it doesn't exist
         pass
 
@@ -453,7 +453,7 @@ Expected: All tests PASS
 **Step 7: Commit**
 
 ```bash
-git add drama_detective/session.py tests/test_session.py
+git add src/session.py tests/test_session.py
 git commit -m "feat: add session manager with save/load/list"
 ```
 
@@ -462,7 +462,7 @@ git commit -m "feat: add session manager with save/load/list"
 ## Task 4: API Client Utilities
 
 **Files:**
-- Create: `drama_detective/api_client.py`
+- Create: `src/api_client.py`
 - Create: `tests/test_api_client.py`
 
 **Step 1: Write test for API client initialization**
@@ -472,7 +472,7 @@ File: `tests/test_api_client.py`
 ```python
 import pytest
 from unittest.mock import Mock, patch
-from drama_detective.api_client import ClaudeClient
+from src.api_client import ClaudeClient
 
 def test_client_initialization():
     # TODO: Mock environment variable for API key
@@ -488,7 +488,7 @@ Expected: FAIL with import error
 
 **Step 3: Implement ClaudeClient**
 
-File: `drama_detective/api_client.py`
+File: `src/api_client.py`
 
 ```python
 import os
@@ -551,7 +551,7 @@ Expected: All tests PASS
 **Step 7: Commit**
 
 ```bash
-git add drama_detective/api_client.py tests/test_api_client.py
+git add src/api_client.py tests/test_api_client.py
 git commit -m "feat: add Claude API client with retry logic"
 ```
 
@@ -560,11 +560,11 @@ git commit -m "feat: add Claude API client with retry logic"
 ## Task 5: Prompts Module
 
 **Files:**
-- Create: `drama_detective/prompts.py`
+- Create: `src/prompts.py`
 
 **Step 1: Create prompts module**
 
-File: `drama_detective/prompts.py`
+File: `src/prompts.py`
 
 ```python
 """System prompts for all agents in Drama Detective."""
@@ -663,7 +663,7 @@ def build_analysis_prompt(session_data: dict) -> str:
 **Step 2: Commit**
 
 ```bash
-git add drama_detective/prompts.py
+git add src/prompts.py
 git commit -m "feat: add system prompts for all agents"
 ```
 
@@ -672,8 +672,8 @@ git commit -m "feat: add system prompts for all agents"
 ## Task 6: Agent Implementation - Goal Generator
 
 **Files:**
-- Create: `drama_detective/agents/__init__.py`
-- Create: `drama_detective/agents/goal_generator.py`
+- Create: `src/agents/__init__.py`
+- Create: `src/agents/goal_generator.py`
 - Create: `tests/test_agents/test_goal_generator.py`
 
 **Step 1: Write test for goal generator**
@@ -683,8 +683,8 @@ File: `tests/test_agents/test_goal_generator.py`
 ```python
 import pytest
 from unittest.mock import Mock, patch
-from drama_detective.agents.goal_generator import GoalGeneratorAgent
-from drama_detective.models import Goal
+from src.agents.goal_generator import GoalGeneratorAgent
+from src.models import Goal
 
 def test_generate_goals():
     # TODO: Create agent
@@ -701,15 +701,15 @@ Expected: FAIL with import error
 
 **Step 3: Implement GoalGeneratorAgent**
 
-File: `drama_detective/agents/__init__.py` (empty file)
+File: `src/agents/__init__.py` (empty file)
 
-File: `drama_detective/agents/goal_generator.py`
+File: `src/agents/goal_generator.py`
 
 ```python
 import json
-from drama_detective.api_client import ClaudeClient
-from drama_detective.prompts import GOAL_GENERATOR_SYSTEM, build_goal_generator_prompt
-from drama_detective.models import Goal, GoalStatus
+from src.api_client import ClaudeClient
+from src.prompts import GOAL_GENERATOR_SYSTEM, build_goal_generator_prompt
+from src.models import Goal, GoalStatus
 
 
 class GoalGeneratorAgent:
@@ -734,7 +734,7 @@ Expected: Test PASS
 **Step 5: Commit**
 
 ```bash
-git add drama_detective/agents/ tests/test_agents/
+git add src/agents/ tests/test_agents/
 git commit -m "feat: implement goal generator agent"
 ```
 
@@ -743,7 +743,7 @@ git commit -m "feat: implement goal generator agent"
 ## Task 7: Agent Implementation - Fact Extractor
 
 **Files:**
-- Create: `drama_detective/agents/fact_extractor.py`
+- Create: `src/agents/fact_extractor.py`
 - Create: `tests/test_agents/test_fact_extractor.py`
 
 **Step 1: Write test for fact extractor**
@@ -753,8 +753,8 @@ File: `tests/test_agents/test_fact_extractor.py`
 ```python
 import pytest
 from unittest.mock import patch
-from drama_detective.agents.fact_extractor import FactExtractorAgent
-from drama_detective.models import Fact
+from src.agents.fact_extractor import FactExtractorAgent
+from src.models import Fact
 
 def test_extract_facts():
     # TODO: Create agent
@@ -771,13 +771,13 @@ Expected: FAIL with import error
 
 **Step 3: Implement FactExtractorAgent**
 
-File: `drama_detective/agents/fact_extractor.py`
+File: `src/agents/fact_extractor.py`
 
 ```python
 import json
-from drama_detective.api_client import ClaudeClient
-from drama_detective.prompts import FACT_EXTRACTOR_SYSTEM, build_fact_extractor_prompt
-from drama_detective.models import Fact
+from src.api_client import ClaudeClient
+from src.prompts import FACT_EXTRACTOR_SYSTEM, build_fact_extractor_prompt
+from src.models import Fact
 
 
 class FactExtractorAgent:
@@ -802,7 +802,7 @@ Expected: Test PASS
 **Step 5: Commit**
 
 ```bash
-git add drama_detective/agents/fact_extractor.py tests/test_agents/test_fact_extractor.py
+git add src/agents/fact_extractor.py tests/test_agents/test_fact_extractor.py
 git commit -m "feat: implement fact extractor agent"
 ```
 
@@ -811,7 +811,7 @@ git commit -m "feat: implement fact extractor agent"
 ## Task 8: Agent Implementation - Drift Detector
 
 **Files:**
-- Create: `drama_detective/agents/drift_detector.py`
+- Create: `src/agents/drift_detector.py`
 - Create: `tests/test_agents/test_drift_detector.py`
 
 **Step 1: Write test for drift detector**
@@ -821,7 +821,7 @@ File: `tests/test_agents/test_drift_detector.py`
 ```python
 import pytest
 from unittest.mock import patch
-from drama_detective.agents.drift_detector import DriftDetectorAgent
+from src.agents.drift_detector import DriftDetectorAgent
 
 def test_detect_no_drift():
     # TODO: Create agent
@@ -846,12 +846,12 @@ Expected: FAIL with import error
 
 **Step 3: Implement DriftDetectorAgent**
 
-File: `drama_detective/agents/drift_detector.py`
+File: `src/agents/drift_detector.py`
 
 ```python
 import json
-from drama_detective.api_client import ClaudeClient
-from drama_detective.prompts import DRIFT_DETECTOR_SYSTEM, build_drift_detector_prompt
+from src.api_client import ClaudeClient
+from src.prompts import DRIFT_DETECTOR_SYSTEM, build_drift_detector_prompt
 
 
 class DriftDetectorAgent:
@@ -875,7 +875,7 @@ Expected: All tests PASS
 **Step 5: Commit**
 
 ```bash
-git add drama_detective/agents/drift_detector.py tests/test_agents/test_drift_detector.py
+git add src/agents/drift_detector.py tests/test_agents/test_drift_detector.py
 git commit -m "feat: implement drift detector agent"
 ```
 
@@ -884,7 +884,7 @@ git commit -m "feat: implement drift detector agent"
 ## Task 9: Agent Implementation - Goal Tracker
 
 **Files:**
-- Create: `drama_detective/agents/goal_tracker.py`
+- Create: `src/agents/goal_tracker.py`
 - Create: `tests/test_agents/test_goal_tracker.py`
 
 **Step 1: Write test for goal tracker**
@@ -894,8 +894,8 @@ File: `tests/test_agents/test_goal_tracker.py`
 ```python
 import pytest
 from unittest.mock import patch
-from drama_detective.agents.goal_tracker import GoalTrackerAgent
-from drama_detective.models import Goal, Fact, GoalStatus
+from src.agents.goal_tracker import GoalTrackerAgent
+from src.models import Goal, Fact, GoalStatus
 
 def test_update_goals():
     # TODO: Create agent
@@ -914,13 +914,13 @@ Expected: FAIL with import error
 
 **Step 3: Implement GoalTrackerAgent**
 
-File: `drama_detective/agents/goal_tracker.py`
+File: `src/agents/goal_tracker.py`
 
 ```python
 import json
-from drama_detective.api_client import ClaudeClient
-from drama_detective.prompts import GOAL_TRACKER_SYSTEM, build_goal_tracker_prompt
-from drama_detective.models import Goal, Fact, GoalStatus
+from src.api_client import ClaudeClient
+from src.prompts import GOAL_TRACKER_SYSTEM, build_goal_tracker_prompt
+from src.models import Goal, Fact, GoalStatus
 
 
 class GoalTrackerAgent:
@@ -948,7 +948,7 @@ Expected: Test PASS
 **Step 5: Commit**
 
 ```bash
-git add drama_detective/agents/goal_tracker.py tests/test_agents/test_goal_tracker.py
+git add src/agents/goal_tracker.py tests/test_agents/test_goal_tracker.py
 git commit -m "feat: implement goal tracker agent"
 ```
 
@@ -957,7 +957,7 @@ git commit -m "feat: implement goal tracker agent"
 ## Task 10: Agent Implementation - Question Generator
 
 **Files:**
-- Create: `drama_detective/agents/question_generator.py`
+- Create: `src/agents/question_generator.py`
 - Create: `tests/test_agents/test_question_generator.py`
 
 **Step 1: Write test for question generator**
@@ -967,8 +967,8 @@ File: `tests/test_agents/test_question_generator.py`
 ```python
 import pytest
 from unittest.mock import patch
-from drama_detective.agents.question_generator import QuestionGeneratorAgent
-from drama_detective.models import Goal, Fact, Message
+from src.agents.question_generator import QuestionGeneratorAgent
+from src.models import Goal, Fact, Message
 
 def test_generate_question():
     # TODO: Create agent with low-confidence goals
@@ -991,13 +991,13 @@ Expected: FAIL with import error
 
 **Step 3: Implement QuestionGeneratorAgent**
 
-File: `drama_detective/agents/question_generator.py`
+File: `src/agents/question_generator.py`
 
 ```python
 import json
-from drama_detective.api_client import ClaudeClient
-from drama_detective.prompts import QUESTION_GENERATOR_SYSTEM, build_question_generator_prompt
-from drama_detective.models import Goal, Fact, Message
+from src.api_client import ClaudeClient
+from src.prompts import QUESTION_GENERATOR_SYSTEM, build_question_generator_prompt
+from src.models import Goal, Fact, Message
 
 
 class QuestionGeneratorAgent:
@@ -1030,7 +1030,7 @@ Expected: All tests PASS
 **Step 5: Commit**
 
 ```bash
-git add drama_detective/agents/question_generator.py tests/test_agents/test_question_generator.py
+git add src/agents/question_generator.py tests/test_agents/test_question_generator.py
 git commit -m "feat: implement question generator agent"
 ```
 
@@ -1039,7 +1039,7 @@ git commit -m "feat: implement question generator agent"
 ## Task 11: Agent Implementation - Analysis Agent
 
 **Files:**
-- Create: `drama_detective/agents/analysis_agent.py`
+- Create: `src/agents/analysis_agent.py`
 - Create: `tests/test_agents/test_analysis_agent.py`
 
 **Step 1: Write test for analysis agent**
@@ -1049,7 +1049,7 @@ File: `tests/test_agents/test_analysis_agent.py`
 ```python
 import pytest
 from unittest.mock import patch
-from drama_detective.agents.analysis_agent import AnalysisAgent
+from src.agents.analysis_agent import AnalysisAgent
 
 def test_generate_analysis():
     # TODO: Create agent
@@ -1068,12 +1068,12 @@ Expected: FAIL with import error
 
 **Step 3: Implement AnalysisAgent**
 
-File: `drama_detective/agents/analysis_agent.py`
+File: `src/agents/analysis_agent.py`
 
 ```python
 import json
-from drama_detective.api_client import ClaudeClient
-from drama_detective.prompts import ANALYSIS_SYSTEM, build_analysis_prompt
+from src.api_client import ClaudeClient
+from src.prompts import ANALYSIS_SYSTEM, build_analysis_prompt
 
 
 class AnalysisAgent:
@@ -1097,7 +1097,7 @@ Expected: Test PASS
 **Step 5: Commit**
 
 ```bash
-git add drama_detective/agents/analysis_agent.py tests/test_agents/test_analysis_agent.py
+git add src/agents/analysis_agent.py tests/test_agents/test_analysis_agent.py
 git commit -m "feat: implement analysis agent"
 ```
 
@@ -1106,7 +1106,7 @@ git commit -m "feat: implement analysis agent"
 ## Task 12: Interview Orchestrator
 
 **Files:**
-- Create: `drama_detective/interview.py`
+- Create: `src/interview.py`
 - Create: `tests/test_interview.py`
 
 **Step 1: Write test for interview orchestrator initialization**
@@ -1116,8 +1116,8 @@ File: `tests/test_interview.py`
 ```python
 import pytest
 from unittest.mock import Mock, patch
-from drama_detective.interview import InterviewOrchestrator
-from drama_detective.models import Session
+from src.interview import InterviewOrchestrator
+from src.models import Session
 
 def test_orchestrator_initialization():
     # TODO: Create Session
@@ -1134,16 +1134,16 @@ Expected: FAIL with import error
 
 **Step 3: Implement InterviewOrchestrator**
 
-File: `drama_detective/interview.py`
+File: `src/interview.py`
 
 ```python
 from datetime import datetime
-from drama_detective.models import Session, Message, SessionStatus
-from drama_detective.agents.goal_generator import GoalGeneratorAgent
-from drama_detective.agents.fact_extractor import FactExtractorAgent
-from drama_detective.agents.drift_detector import DriftDetectorAgent
-from drama_detective.agents.goal_tracker import GoalTrackerAgent
-from drama_detective.agents.question_generator import QuestionGeneratorAgent
+from src.models import Session, Message, SessionStatus
+from src.agents.goal_generator import GoalGeneratorAgent
+from src.agents.fact_extractor import FactExtractorAgent
+from src.agents.drift_detector import DriftDetectorAgent
+from src.agents.goal_tracker import GoalTrackerAgent
+from src.agents.question_generator import QuestionGeneratorAgent
 
 
 class InterviewOrchestrator:
@@ -1212,7 +1212,7 @@ Expected: All tests PASS
 **Step 7: Commit**
 
 ```bash
-git add drama_detective/interview.py tests/test_interview.py
+git add src/interview.py tests/test_interview.py
 git commit -m "feat: implement interview orchestrator with agent pipeline"
 ```
 
@@ -1221,11 +1221,11 @@ git commit -m "feat: implement interview orchestrator with agent pipeline"
 ## Task 13: CLI Commands - Basic Structure
 
 **Files:**
-- Create: `drama_detective/cli.py`
+- Create: `src/cli.py`
 
 **Step 1: Implement basic CLI structure**
 
-File: `drama_detective/cli.py`
+File: `src/cli.py`
 
 ```python
 import click
@@ -1239,37 +1239,46 @@ console = Console()
 
 @click.group()
 def cli():
-    # TODO: Add docstring describing Drama Detective
+    """🔍 Drama Detective - AI-powered drama investigation tool"""
     pass
 
 
 @cli.command()
 @click.argument('incident_name')
 def investigate(incident_name):
-    # TODO: Print welcome banner using Rich Panel
-    # Print incident name
-    # Print placeholder message "coming soon"
-    pass
+    """Start a new drama investigation."""
+    console.print(Panel.fit(
+        "🔍 DRAMA DETECTIVE v1.0 🔍\nTruth-seeking AI interviewer",
+        border_style="bold blue"
+    ))
+
+    console.print(f"\n[bold]Starting investigation:[/bold] {incident_name}\n")
+
+    # Implementation will be added in next task
+    console.print("[yellow]Investigation command - coming soon![/yellow]")
 
 
 @cli.command()
 def list():
-    # TODO: Print placeholder message "coming soon"
-    pass
+    """List all investigations."""
+    # Implementation will be added in next task
+    console.print("[yellow]List command - coming soon![/yellow]")
 
 
 @cli.command()
 @click.argument('session_id')
 def analyze(session_id):
-    # TODO: Print placeholder message with session_id
-    pass
+    """Generate analysis report for an investigation."""
+    # Implementation will be added in next task
+    console.print(f"[yellow]Analyze command for {session_id} - coming soon![/yellow]")
 
 
 @cli.command()
 @click.argument('session_id')
 def resume(session_id):
-    # TODO: Print placeholder message with session_id
-    pass
+    """Resume a paused investigation."""
+    # Implementation will be added in next task
+    console.print(f"[yellow]Resume command for {session_id} - coming soon![/yellow]")
 
 
 if __name__ == '__main__':
@@ -1287,7 +1296,7 @@ Expected: Shows "coming soon" message
 **Step 3: Commit**
 
 ```bash
-git add drama_detective/cli.py
+git add src/cli.py
 git commit -m "feat: add basic CLI structure with rich formatting"
 ```
 
@@ -1296,11 +1305,11 @@ git commit -m "feat: add basic CLI structure with rich formatting"
 ## Task 14: CLI Commands - Investigate Implementation
 
 **Files:**
-- Modify: `drama_detective/cli.py`
+- Modify: `src/cli.py`
 
 **Step 1: Implement investigate command**
 
-File: `drama_detective/cli.py` - Replace the `investigate` function:
+File: `src/cli.py` - Replace the `investigate` function:
 
 ```python
 @cli.command()
@@ -1333,7 +1342,7 @@ Expected: Prompts for summary, generates questions, allows answers
 **Step 3: Commit**
 
 ```bash
-git add drama_detective/cli.py
+git add src/cli.py
 git commit -m "feat: implement investigate command with interview loop"
 ```
 
@@ -1342,11 +1351,11 @@ git commit -m "feat: implement investigate command with interview loop"
 ## Task 15: CLI Commands - List Implementation
 
 **Files:**
-- Modify: `drama_detective/cli.py`
+- Modify: `src/cli.py`
 
 **Step 1: Implement list command**
 
-File: `drama_detective/cli.py` - Replace the `list` function:
+File: `src/cli.py` - Replace the `list` function:
 
 ```python
 @cli.command()
@@ -1375,7 +1384,7 @@ Expected: Shows table of all investigations
 **Step 3: Commit**
 
 ```bash
-git add drama_detective/cli.py
+git add src/cli.py
 git commit -m "feat: implement list command with rich table"
 ```
 
@@ -1384,12 +1393,12 @@ git commit -m "feat: implement list command with rich table"
 ## Task 16: CLI Commands - Analyze Implementation
 
 **Files:**
-- Modify: `drama_detective/cli.py`
-- Create: `drama_detective/report_formatter.py`
+- Modify: `src/cli.py`
+- Create: `src/report_formatter.py`
 
 **Step 1: Create report formatter**
 
-File: `drama_detective/report_formatter.py`
+File: `src/report_formatter.py`
 
 ```python
 from rich.console import Console
@@ -1429,7 +1438,7 @@ def format_report(analysis: dict, incident_name: str, console: Console):
 
 **Step 2: Implement analyze command**
 
-File: `drama_detective/cli.py` - Replace the `analyze` function:
+File: `src/cli.py` - Replace the `analyze` function:
 
 ```python
 @cli.command()
@@ -1453,7 +1462,7 @@ Expected: Shows formatted analysis report
 **Step 4: Commit**
 
 ```bash
-git add drama_detective/cli.py drama_detective/report_formatter.py
+git add src/cli.py src/report_formatter.py
 git commit -m "feat: implement analyze command with formatted report"
 ```
 
@@ -1462,11 +1471,11 @@ git commit -m "feat: implement analyze command with formatted report"
 ## Task 17: CLI Commands - Resume Implementation
 
 **Files:**
-- Modify: `drama_detective/cli.py`
+- Modify: `src/cli.py`
 
 **Step 1: Implement resume command**
 
-File: `drama_detective/cli.py` - Replace the `resume` function:
+File: `src/cli.py` - Replace the `resume` function:
 
 ```python
 @cli.command()
@@ -1497,7 +1506,7 @@ Expected: Resumes paused investigation from where it left off
 **Step 3: Commit**
 
 ```bash
-git add drama_detective/cli.py
+git add src/cli.py
 git commit -m "feat: implement resume command for paused investigations"
 ```
 
@@ -1506,12 +1515,12 @@ git commit -m "feat: implement resume command for paused investigations"
 ## Task 18: Error Handling and Edge Cases
 
 **Files:**
-- Modify: `drama_detective/api_client.py`
-- Modify: `drama_detective/interview.py`
+- Modify: `src/api_client.py`
+- Modify: `src/interview.py`
 
 **Step 1: Add better error handling to API client**
 
-File: `drama_detective/api_client.py` - Update the `call` method:
+File: `src/api_client.py` - Update the `call` method:
 
 ```python
 def call(
@@ -1531,7 +1540,7 @@ def call(
 
 **Step 2: Add input validation to interview**
 
-File: `drama_detective/interview.py` - Update `process_answer` method:
+File: `src/interview.py` - Update `process_answer` method:
 
 ```python
 def process_answer(self, answer: str) -> tuple[str, bool]:
@@ -1551,7 +1560,7 @@ Create manual test scenarios:
 **Step 4: Commit**
 
 ```bash
-git add drama_detective/api_client.py drama_detective/interview.py
+git add src/api_client.py src/interview.py
 git commit -m "feat: add comprehensive error handling and input validation"
 ```
 
@@ -1596,11 +1605,11 @@ git commit -m "docs: add comprehensive README with examples"
 
 **Files:**
 - Create: `examples/demo_transcript.md`
-- Modify: `drama_detective/cli.py` (add version info)
+- Modify: `src/cli.py` (add version info)
 
 **Step 1: Add version to CLI**
 
-File: `drama_detective/cli.py` - Update the `cli` group:
+File: `src/cli.py` - Update the `cli` group:
 
 ```python
 @click.group()
@@ -1637,7 +1646,7 @@ Test the complete flow:
 **Step 4: Final commit**
 
 ```bash
-git add examples/demo_transcript.md drama_detective/cli.py
+git add examples/demo_transcript.md src/cli.py
 git commit -m "feat: add version info and demo transcript"
 ```
 

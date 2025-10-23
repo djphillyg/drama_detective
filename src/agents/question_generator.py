@@ -1,11 +1,12 @@
 import json
+from typing import Union
 from src.api_client import ClaudeClient
 from src.prompts import QUESTION_WITH_ANSWERS_SYSTEM, build_question_with_answers_prompt
 from src.models import Goal, Fact, Message
 
 
 class QuestionGeneratorAgent:
-    def __init__(self, client: ClaudeClient = None):
+    def __init__(self, client: ClaudeClient):
         self.client = client
 
     # v1: the question will come with answers, could implement with vapi or somethign
@@ -34,9 +35,10 @@ class QuestionGeneratorAgent:
 
         # Call Claude API
         response = self.client.call(QUESTION_WITH_ANSWERS_SYSTEM, user_prompt)
-
+        cleaned_json = self.client.extract_json_from_response(response)
+        assert isinstance(cleaned_json, dict), f"Expected dict, got {type(cleaned_json)}"
         # Parse JSON response
-        question_data = self.client.extract_json_from_response(response)
+        question_data: dict = cleaned_json
 
         # Return question and answers in the parsed format it came in
         return question_data

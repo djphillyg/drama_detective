@@ -13,7 +13,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "drama=drama_detective.cli:cli",
+            "drama=src.cli:cli",
         ],
     },
     python_requires=">=3.9",

@@ -137,3 +137,4 @@ def test_process_answer_pipeline():
         # Assert answers were stored
         assert len(session.answers) == 4
         assert session.answers[0].answer == "John and Alex were there"
+        
