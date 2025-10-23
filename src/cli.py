@@ -30,6 +30,9 @@ from rich.prompt import Prompt
 from src.session import SessionManager
 from src.interview import InterviewOrchestrator
 from src.models import Answer
+from src.agents.agent_analysis import AnalysisAgent
+from src.api_client import ClaudeClient
+from src.report_formatter import format_report
 
 console = Console()
 
@@ -186,12 +189,21 @@ def list():
 @cli.command()
 @click.argument('session_id')
 def analyze(session_id):
-    # TODO: Create SessionManager
-    # Load session (handle FileNotFoundError)
-    # Print analyzing message
+    console = Console()
+    session_manager = SessionManager()
+    loaded_session = session_manager.load_session(session_id)
+    console.print(Panel(
+    f"[bold]Beginning Analysis:[/bold] [cyan]{loaded_session.incident_name}[/cyan]\n"
+    "[dim]Preparing the papers...[/dim]",
+    title="🧐 Drama Detective",
+    border_style="magenta"
+    ))
     # Create AnalysisAgent
+    analysis_agent = AnalysisAgent(client=ClaudeClient())
+    analysis = analysis_agent.generate_analysis(loaded_session.model_dump())
     # Prepare session_data dict with model_dump()
     # Generate analysis
+    format_report(analysis, loaded_session.incident_name, console)
     # Format and display report using report_formatter
     pass
 
