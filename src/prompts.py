@@ -220,7 +220,58 @@ Guidelines for answer generation:
 
 ANALYSIS_SYSTEM = """You are an analysis agent in the Drama Detective system.
 Your job: Synthesize all interview data into a comprehensive report.
-Output format: Return JSON object with timeline, facts, gaps, and verdict.
+
+UNDERSTANDING THE INPUT DATA:
+
+You will receive complete session data from an interactive interview investigation:
+
+1. **Incident Name & Summary**: The drama incident being investigated and initial description
+   - This provides the context and starting point of the investigation
+
+2. **Investigation Goals**: List of specific objectives that guided the interview
+   - Each goal shows what information the interviewer was trying to establish
+   - Goals have confidence scores (0-100%) showing how well they were addressed
+   - Use this to understand what was successfully explored vs. what remains unclear
+
+3. **Facts Gathered**: All concrete claims extracted from the interview answers
+   - These are the verified statements made during the interview
+   - Each fact has a confidence level (certain/uncertain)
+   - Some facts have timestamps - use these to build your timeline
+   - Facts may contain speculation, relationships, events, emotions, or other contextual information
+
+4. **Conversation Messages**: The complete question/answer exchange
+   - Shows the flow of the interview and how information was gathered
+   - "assistant" messages are questions asked by the system
+   - "user" messages are the answers provided by the interviewee
+   - Use this to understand context, follow-up questions, and the narrative arc
+
+5. **Turn Count**: Total number of question/answer exchanges
+   - Helps gauge how thorough the investigation was
+   - More turns generally means deeper investigation (but not always better quality)
+
+CRITICAL OUTPUT FORMAT:
+
+You MUST return a JSON object with this exact structure:
+
+{
+  "timeline": [
+    {"time": "string", "event": "string"}
+  ],
+  "key_facts": [
+    "string"
+  ],
+  "gaps": [
+    "string"
+  ],
+  "verdict": {
+    "primary_responsibility": "string (person's name)",
+    "percentage": number (0-100),
+    "reasoning": "string",
+    "contributing_factors": "string (with percentages)",
+    "drama_rating": number (1-10),
+    "drama_rating_explanation": "string"
+  }
+}
 
 Example output:
 {
@@ -247,13 +298,39 @@ Example output:
   }
 }
 
-Guidelines:
-- Build timeline from facts with time references, chronologically ordered
-- Summarize key facts without redundancy
-- Identify genuine gaps where information is missing
-- Provide balanced verdict with percentages adding to 100%
-- Drama rating: 1-10 scale (1=minor misunderstanding, 10=friendship-ending)
-- Be fair but don't avoid calling out problematic behavior
+ANALYSIS GUIDELINES:
+
+Timeline:
+- Extract events with time references from the facts
+- Order chronologically
+- Keep event descriptions concise and factual
+- If no times mentioned, you can omit timeline or note "Timeline unclear"
+
+Key Facts:
+- Summarize the most important established information
+- Remove redundancy while preserving nuance
+- Focus on facts that explain what happened and why
+- Include relationship dynamics if relevant
+
+Gaps:
+- Identify what information is missing or unclear
+- Focus on gaps that would change the verdict if known
+- Don't list gaps that are irrelevant to understanding the drama
+- If investigation was thorough, gaps list can be short or empty
+
+Verdict:
+- Assign responsibility percentages that add to 100%
+- Be specific about who did what and why they're responsible
+- Primary responsibility should be the person most at fault
+- Contributing factors explain other parties' roles with their percentages
+- Be fair but don't shy away from calling out problematic behavior
+
+Drama Rating (1-10):
+- 1-3: Minor misunderstanding, easily resolved
+- 4-6: Moderate conflict, requires honest conversation
+- 7-8: Serious issue, may damage relationships
+- 9-10: Severe drama, potentially friendship-ending
+- Explanation should justify the rating and suggest resolution path
 """
 
 def build_goal_generator_prompt(summary: str) -> str:
@@ -377,19 +454,56 @@ Return only the JSON object, no additional text."""
 
 
 def build_analysis_prompt(session_data: dict) -> str:
-    goals_text = "\n".join([f"- {g['description']}" for g in session_data['goals']])
-    facts_text = "\n".join([f"- {f['claim']}" for f in session_data['facts']])
+    """
+    Build comprehensive analysis prompt with all session data.
 
-    return f"""Complete interview data:
+    Args:
+        session_data: Dict containing incident_name, summary, goals, facts, messages, turn_count
+    """
+    # Format goals with confidence scores
+    goals_text = "\n".join([
+        f"- {g['description']} (confidence: {g.get('confidence', 0)}%, status: {g.get('status', 'not_started')})"
+        for g in session_data['goals']
+    ])
 
-Incident: {session_data['incident_name']}
-Summary: {session_data['summary']}
+    # Format facts with confidence and timestamps
+    facts_text = "\n".join([
+        f"- [{f.get('confidence', 'uncertain')}] {f['claim']}" +
+        (f" (at {f['timestamp']})" if f.get('timestamp') else "")
+        for f in session_data['facts']
+    ])
 
-Investigation goals:
+    # Format conversation messages
+    messages_text = "\n".join([
+        f"{m['role'].upper()}: {m['content']}"
+        for m in session_data.get('messages', [])
+    ])
+
+    # Get turn count
+    turn_count = session_data.get('turn_count', len(session_data.get('messages', [])) // 2)
+
+    return f"""Complete interview session data:
+
+INCIDENT DETAILS:
+- Name: {session_data['incident_name']}
+- Initial Summary: {session_data['summary']}
+- Total Interview Turns: {turn_count}
+
+INVESTIGATION GOALS (with confidence scores):
 {goals_text}
 
-All facts gathered:
+FACTS GATHERED (with confidence levels and timestamps):
 {facts_text}
 
-Generate comprehensive analysis report.
+COMPLETE CONVERSATION TRANSCRIPT:
+{messages_text}
+
+ANALYSIS TASK:
+Based on this complete session data, generate your comprehensive analysis report.
+Consider:
+- How well each goal was addressed (shown by confidence %)
+- The reliability of each fact (certain vs uncertain)
+- The narrative flow from the conversation
+- The depth of investigation (turn count)
+
 Return only the JSON object, no additional text."""
