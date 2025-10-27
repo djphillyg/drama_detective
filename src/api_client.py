@@ -25,9 +25,14 @@ class ClaudeClient:
         self,
         system_prompt: str,
         user_prompt: str,
-        max_retries: int = 3
+        max_retries: int = 3,
+        session_id: Optional[str] = None
     ) -> str:
         last_error: Optional[Exception] = None
+
+        # Add session ID to system prompt to prevent cross-session context bleeding
+        if session_id:
+            system_prompt = f"[Session: {session_id}]\n\n{system_prompt}"
 
         for attempt in range(max_retries):
             try:

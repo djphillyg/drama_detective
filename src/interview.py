@@ -14,6 +14,8 @@ class InterviewOrchestrator:
     def __init__(self, session: Session):
         # TODO: Store session
         self.session: Session = session
+        # Store session_id for context isolation
+        self.session_id: str = session.session_id
         # Initialize turn_count to 0
         self.turn_count = 0
         # Initialize all agent instances
@@ -28,13 +30,14 @@ class InterviewOrchestrator:
         # TODO: Store summary in session
         self.session.summary = summary
         # Use goal_generator to create goals
-        self.session.goals = self.goal_generator.generate_goals(summary)
+        self.session.goals = self.goal_generator.generate_goals(summary, session_id=self.session_id)
         # Use question_generator to create first question
         question_data = self.question_generator.generate_question_with_answers(
             self.session.goals,
             self.session.facts,
             self.session.messages,
-            # leave out drift redirect for now
+            drift_redirect="",
+            session_id=self.session_id
         )
         first_question = question_data["question"]
         self.session.current_question = question_data["question"]
@@ -64,7 +67,7 @@ class InterviewOrchestrator:
             timestamp=datetime.now().isoformat()
         ))
         # Extract facts using fact_extractor
-        gen_facts = self.fact_extractor.extract_facts(self.session.current_question, answer)
+        gen_facts = self.fact_extractor.extract_facts(self.session.current_question, answer, session_id=self.session_id)
         # Add facts to session.facts
         self.session.facts.extend(gen_facts)
         # Check drift every 3 turns using drift_detector
@@ -72,14 +75,16 @@ class InterviewOrchestrator:
         if self.turn_count % 3 == 0:
             drift_analysis = self.drift_detector.check_drift(
                 self.session.current_question,
-                answer.answer
+                answer.answer,
+                session_id=self.session_id
             )
             if not drift_analysis["addressed_question"]:
                 drift_redirect = drift_analysis["redirect_suggestion"]
       # Step 3: Update goal confidence scores
         self.session.goals = self.goal_tracker.update_goals(
             self.session.goals,
-            gen_facts
+            gen_facts,
+            session_id=self.session_id
         )
 
         # Step 4: Generate next question
@@ -87,7 +92,8 @@ class InterviewOrchestrator:
             self.session.goals,
             self.session.facts,
             self.session.messages,
-            drift_redirect
+            drift_redirect,
+            session_id=self.session_id
         )
 
         # Check if interview is complete

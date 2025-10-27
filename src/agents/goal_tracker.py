@@ -1,3 +1,4 @@
+from typing import Optional
 from src.api_client import ClaudeClient
 from src.prompts import GOAL_TRACKER_SYSTEM, build_goal_tracker_prompt
 from src.models import Goal, Fact, GoalStatus
@@ -7,7 +8,7 @@ class GoalTrackerAgent:
     def __init__(self, client: ClaudeClient):
         self.client = client
 
-    def update_goals(self, goals: list[Goal], new_facts: list[Fact]) -> list[Goal]:
+    def update_goals(self, goals: list[Goal], new_facts: list[Fact], session_id: Optional[str] = None) -> list[Goal]:
         # Return unchanged goals if no new facts
         if not new_facts:
             return goals
@@ -34,7 +35,7 @@ class GoalTrackerAgent:
         user_prompt = build_goal_tracker_prompt(goals_dicts, facts_dicts)
 
         # Call Claude API
-        response = self.client.call(GOAL_TRACKER_SYSTEM, user_prompt)
+        response = self.client.call(GOAL_TRACKER_SYSTEM, user_prompt, session_id=session_id)
 
         # Parse JSON response
         updates = self.client.extract_json_from_response(response)
