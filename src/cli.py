@@ -52,9 +52,19 @@ def investigate(incident_name):
         title="🕵️ Drama Detective",
         border_style="magenta"
     ))
-    # Prompt user for summary using console.input()
-    summary = console.input("\n[cyan]Describe what happened: [/cyan] ")
-    # Validate summary is not empty
+    # Prompt user for summary - use click.edit() for multi-line support
+    console.print("\n[cyan]Describe what happened (editor will open):[/cyan]")
+    summary = click.edit("\n# Enter your incident summary below. Save and close to continue.\n# Lines starting with # will be ignored.\n\n")
+
+    # Validate summary is not empty (filter out comment lines)
+    if not summary:
+        console.print("[red]Error: Summary cannot be empty[/red]")
+        return
+
+    # Remove comment lines and extra whitespace
+    summary_lines = [line for line in summary.split('\n') if line.strip() and not line.strip().startswith('#')]
+    summary = ' '.join(summary_lines).strip()
+
     if not summary:
         console.print("[red]Error: Summary cannot be empty[/red]")
         return
@@ -200,7 +210,7 @@ def analyze(session_id):
     ))
     # Create AnalysisAgent
     analysis_agent = AnalysisAgent(client=ClaudeClient())
-    analysis = analysis_agent.generate_analysis(loaded_session.model_dump())
+    analysis = analysis_agent.generate_analysis(loaded_session.model_dump(), session_id=loaded_session.session_id)
     # Prepare session_data dict with model_dump()
     # Generate analysis
     format_report(analysis, loaded_session.incident_name, console)

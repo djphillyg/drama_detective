@@ -1,4 +1,5 @@
 import json
+from typing import Optional
 from src.api_client import ClaudeClient
 from src.prompts import FACT_EXTRACTOR_SYSTEM, build_fact_extractor_prompt
 from src.models import Fact, Answer
@@ -10,13 +11,14 @@ class FactExtractorAgent:
         self.client = client
         pass
 
-    def extract_facts(self, question: str, answer_obj: Answer) -> list[Fact]:
+    def extract_facts(self, question: str, answer_obj: Answer, session_id: Optional[str] = None) -> list[Fact]:
         """
         Extract facts from a user-selected answer.
 
         Args:
             question: The question that was asked
             answer_obj: Dict with 'answer' and 'reasoning' keys from Answer model
+            session_id: Optional session ID for context isolation
 
         Returns:
             List of Fact objects
@@ -27,14 +29,36 @@ class FactExtractorAgent:
         # Call Claude API
         response = self.client.call(
             FACT_EXTRACTOR_SYSTEM,
-            fact_gen_prompt
+            fact_gen_prompt,
+            session_id=session_id
         )
 
         # Parse JSON response
         cleaned_json = self.client.extract_json_from_response(response)
 
-        # Assert we received a list
-        assert isinstance(cleaned_json, list), f"Expected list of facts, got {type(cleaned_json).__name__}"
+        # Handle case where Claude returns a dict instead of a list
+        if isinstance(cleaned_json, dict):
+            # Check for common dict structures
+            if "facts" in cleaned_json:
+                # Dict wrapping: {"facts": [...]}
+                cleaned_json = cleaned_json["facts"]
+            elif len(cleaned_json) == 0:
+                # Empty dict, treat as no facts
+                return []
+            else:
+                # Single fact returned as dict, wrap it in a list
+                cleaned_json = [cleaned_json]
+
+        # Ensure we have a list at this point
+        if not isinstance(cleaned_json, list):
+            raise ValueError(
+                f"Expected list of facts, got {type(cleaned_json).__name__}. "
+                f"Response: {cleaned_json}"
+            )
+
+        # Return empty list if no facts
+        if not cleaned_json:
+            return []
 
         # Assert items in list are dicts, not strings
         if cleaned_json:

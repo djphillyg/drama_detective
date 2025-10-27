@@ -1,3 +1,4 @@
+from typing import Optional
 from src.api_client import ClaudeClient
 from src.prompts import GOAL_GENERATOR_SYSTEM, build_goal_generator_prompt
 from src.models import Goal, GoalStatus
@@ -9,7 +10,7 @@ class GoalGeneratorAgent:
         self.client = client
         pass
 
-    def generate_goals(self, summary: str) -> list[Goal]:
+    def generate_goals(self, summary: str, session_id: Optional[str] = None) -> list[Goal]:
         # TODO: Build user prompt from summary
         # Call Claude API with system + user prompt
         # Parse JSON response (handle cases where response has extra text)
@@ -19,7 +20,8 @@ class GoalGeneratorAgent:
         # call claude
         response = self.client.call(
             GOAL_GENERATOR_SYSTEM,
-            user_goal_prompt
+            user_goal_prompt,
+            session_id=session_id
         )
         # clean the response
         cleaned_json = self.client.extract_json_from_response(response)

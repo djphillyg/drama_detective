@@ -1,5 +1,5 @@
 import json
-from typing import Union
+from typing import Union, Optional
 from src.api_client import ClaudeClient
 from src.prompts import QUESTION_WITH_ANSWERS_SYSTEM, build_question_with_answers_prompt
 from src.models import Goal, Fact, Message
@@ -15,7 +15,8 @@ class QuestionGeneratorAgent:
         goals: list[Goal],
         facts: list[Fact],
         messages: list[Message],
-        drift_redirect: str = ""
+        drift_redirect: str = "",
+        session_id: Optional[str] = None
     ) -> dict:
         # Calculate average confidence across goals
         avg_confidence = sum(g.confidence for g in goals) / len(goals) if goals else 0
@@ -34,7 +35,7 @@ class QuestionGeneratorAgent:
         )
 
         # Call Claude API
-        response = self.client.call(QUESTION_WITH_ANSWERS_SYSTEM, user_prompt)
+        response = self.client.call(QUESTION_WITH_ANSWERS_SYSTEM, user_prompt, session_id=session_id)
         cleaned_json = self.client.extract_json_from_response(response)
         assert isinstance(cleaned_json, dict), f"Expected dict, got {type(cleaned_json)}"
         # Parse JSON response
