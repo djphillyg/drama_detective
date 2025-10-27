@@ -40,6 +40,8 @@ class QuestionGeneratorAgent:
         assert isinstance(cleaned_json, dict), f"Expected dict, got {type(cleaned_json)}"
         # Parse JSON response
         question_data: dict = cleaned_json
+        if avg_confidence > 90:
+            question_data["target_goal"] = "wrap_up"
 
         # Return question and answers in the parsed format it came in
         return question_data

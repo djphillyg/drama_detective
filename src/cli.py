@@ -29,7 +29,7 @@ from rich.table import Table
 from rich.prompt import Prompt
 from src.session import SessionManager
 from src.interview import InterviewOrchestrator
-from src.models import Answer
+from src.models import Answer, SessionStatus
 from src.agents.agent_analysis import AnalysisAgent
 from src.api_client import ClaudeClient
 from src.report_formatter import format_report
@@ -129,7 +129,7 @@ def investigate(incident_name):
         session_manager.save_session(session)
         if is_complete:
             console.log("\n[bold] Interview has been complete, onto analyzing")
-            analyze(session.session_id)
+            run_analysis(session.session_id)
             break
         console.print(f"\n[bold]Next Question:[/bold] [cyan]{next_question}[/cyan]")
       
@@ -196,9 +196,8 @@ def list():
     console.print("[dim]Resume a session with:[/dim] [cyan]drama resume <session_id>[/cyan]")
 
 
-@cli.command()
-@click.argument('session_id')
-def analyze(session_id):
+def run_analysis(session_id: str):
+    """Internal function to run analysis - can be called from code or CLI"""
     console = Console()
     session_manager = SessionManager()
     loaded_session = session_manager.load_session(session_id)
@@ -215,14 +214,110 @@ def analyze(session_id):
     # Generate analysis
     format_report(analysis, loaded_session.incident_name, console)
     # Format and display report using report_formatter
-    pass
+
+
+@cli.command()
+@click.argument('session_id')
+def analyze(session_id):
+    """CLI command wrapper for analysis"""
+    run_analysis(session_id)
 
 
 @cli.command()
 @click.argument('session_id')
 def resume(session_id):
-    # TODO: Print placeholder message with session_id
-    pass
+    """Resume an investigation from a previous session"""
+    # Load the session
+    session_manager = SessionManager()
+
+    try:
+        session = session_manager.load_session(session_id)
+    except FileNotFoundError:
+        console.print(f"[red]Error: Session '{session_id}' not found[/red]")
+        console.print("[dim]Use[/dim] [cyan]drama list[/cyan] [dim]to see available sessions[/dim]")
+        return
+
+    # Display resume panel
+    console.print(Panel(
+        f"[bold]Resuming investigation:[/bold] [cyan]{session.incident_name}[/cyan]\n"
+        f"[dim]Session ID: {session_id[:8]}...[/dim]\n"
+        f"[dim]Turn count: {session.turn_count}[/dim]",
+        title="🕵️ Drama Detective",
+        border_style="magenta"
+    ))
+
+    # Check if session is already complete
+    if session.status == SessionStatus.COMPLETE:
+        console.print("\n[yellow]This investigation is already complete.[/yellow]")
+        console.print(f"[dim]View the analysis with:[/dim] [cyan]drama analyze {session_id}[/cyan]")
+        run_analysis(session.session_id)
+        return
+
+    # Show current question
+    if session.current_question:
+        console.print(f"\n[bold]Current question:[/bold] [cyan]{session.current_question}[/cyan]")
+    else:
+        console.print("[red]Error: Session has no current question. Session may be corrupted.[/red]")
+        return
+
+    # Create InterviewOrchestrator with loaded session
+    orchestrator = InterviewOrchestrator(session)
+
+    # Start interview loop (same as investigate command)
+    while True:
+        # Get the answers from the session.answers
+        session_answers = session.answers
+
+        # Display the answers for the user to choose from
+        console.print("\n[bold]Select your answer:[/bold]")
+        letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        for i, answer in enumerate(session_answers):
+            console.print(f"  [bold]{letters[i]})[/bold] {answer.answer}")
+
+        # Add custom answer option
+        custom_letter = letters[len(session_answers)]
+        console.print(f"  [bold]{custom_letter})[/bold] [dim]Other (provide custom answer)[/dim]")
+
+        # Create list of valid letter choices including custom option
+        valid_choices = [letters[i] for i in range(len(session_answers) + 1)]
+
+        # Prompt user to select a letter
+        choice_letter = Prompt.ask("Your answer", choices=valid_choices)
+
+        # Check if user selected custom answer option
+        if choice_letter == custom_letter:
+            # Prompt for custom answer
+            custom_answer_text = console.input("\n[cyan]Enter your answer: [/cyan]")
+
+            # Validate custom answer is not empty
+            if not custom_answer_text:
+                console.print("[red]Error: Answer cannot be empty[/red]")
+                continue
+
+            # Create Answer object for custom answer with generic reasoning
+            selected_answer = Answer(
+                answer=custom_answer_text,
+                reasoning="User provided custom answer not matching predefined options"
+            )
+            selected_answer_text = custom_answer_text
+        else:
+            # Convert letter back to index (A=0, B=1, C=2, etc.)
+            choice_idx = letters.index(choice_letter)
+
+            # Get the actual answer string from the selected Answer object
+            selected_answer_text = session_answers[choice_idx].answer
+            selected_answer: Answer = session_answers[choice_idx]
+
+        console.print(f"\n[green]You selected:[/green] {selected_answer_text}")
+        next_question, is_complete = orchestrator.process_answer(selected_answer)
+        session_manager.save_session(session)
+
+        if is_complete:
+            console.print("\n[bold]Interview has been completed, onto analyzing[/bold]")
+            run_analysis(session.session_id)
+            break
+
+        console.print(f"\n[bold]Next Question:[/bold] [cyan]{next_question}[/cyan]")
 
 
 if __name__ == '__main__':
