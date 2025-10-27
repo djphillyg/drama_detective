@@ -22,3 +22,4 @@ dist/
 
 # Drama Detective data
 .drama
+.worktrees/
