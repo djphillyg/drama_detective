@@ -1,5 +1,3 @@
-from typing import Optional
-
 GOAL_GENERATOR_SYSTEM = """You are a goal generation agent in the Drama Detective system.
 Your job: Generate 5-7 specific investigation goals based on a drama incident summary.
 Output format: Return a JSON array of goal descriptions.
@@ -333,6 +331,7 @@ Drama Rating (1-10):
 - Explanation should justify the rating and suggest resolution path
 """
 
+
 def build_goal_generator_prompt(summary: str) -> str:
     # TODO: Format user prompt with summary
     # Ask for 5-7 goals as JSON array
@@ -355,8 +354,8 @@ def build_fact_extractor_prompt(question: str, answer_obj: dict) -> str:
 
 User's selected answer:
 {{
-  "answer": "{answer_obj['answer']}",
-  "reasoning": "{answer_obj['reasoning']}"
+  "answer": "{answer_obj["answer"]}",
+  "reasoning": "{answer_obj["reasoning"]}"
 }}
 
 Extract all concrete facts from this answer, using the reasoning to understand its significance.
@@ -373,7 +372,12 @@ Return only the JSON object, no additional text."""
 
 
 def build_goal_tracker_prompt(goals: list, new_facts: list) -> str:
-    goals_text = "\n".join([f"- {g['description']} (current confidence: {g['confidence']}%)" for g in goals])
+    goals_text = "\n".join(
+        [
+            f"- {g['description']} (current confidence: {g['confidence']}%)"
+            for g in goals
+        ]
+    )
     facts_text = "\n".join([f"- {f['claim']}" for f in new_facts])
 
     return f"""Current investigation goals:
@@ -387,24 +391,29 @@ Return only the JSON array, no additional text."""
 
 
 def build_question_generator_prompt(
-    goals: list,
-    facts: list,
-    recent_messages: list,
-    drift_redirect: Optional[str] = None
+    goals: list, facts: list, recent_messages: list, drift_redirect: str | None = None
 ) -> str:
-    goals_text = "\n".join([
-        f"- {g['description']} (confidence: {g['confidence']}%, status: {g['status']})"
-        for g in goals
-    ])
+    goals_text = "\n".join(
+        [
+            f"- {g['description']} (confidence: {g['confidence']}%, status: {g['status']})"
+            for g in goals
+        ]
+    )
 
     facts_text = "\n".join([f"- {f['claim']}" for f in facts[-10:]])  # Last 10 facts
 
-    conversation_text = "\n".join([
-        f"{m['role'].upper()}: {m['content']}"
-        for m in recent_messages[-6:]  # Last 3 exchanges
-    ])
+    conversation_text = "\n".join(
+        [
+            f"{m['role'].upper()}: {m['content']}"
+            for m in recent_messages[-6:]  # Last 3 exchanges
+        ]
+    )
 
-    drift_text = f"\n\nIMPORTANT: Previous answer went off-track. Suggested redirect: {drift_redirect}" if drift_redirect else ""
+    drift_text = (
+        f"\n\nIMPORTANT: Previous answer went off-track. Suggested redirect: {drift_redirect}"
+        if drift_redirect
+        else ""
+    )
 
     return f"""Investigation goals:
 {goals_text}
@@ -420,25 +429,30 @@ Return only the JSON object, no additional text."""
 
 
 def build_question_with_answers_prompt(
-    goals: list,
-    facts: list,
-    recent_messages: list,
-    drift_redirect: str
+    goals: list, facts: list, recent_messages: list, drift_redirect: str
 ) -> str:
     """Build prompt for merged question + answers generation."""
-    goals_text = "\n".join([
-        f"- {g['description']} (confidence: {g['confidence']}%, status: {g['status']})"
-        for g in goals
-    ])
+    goals_text = "\n".join(
+        [
+            f"- {g['description']} (confidence: {g['confidence']}%, status: {g['status']})"
+            for g in goals
+        ]
+    )
 
     facts_text = "\n".join([f"- {f['claim']}" for f in facts[-10:]])  # Last 10 facts
 
-    conversation_text = "\n".join([
-        f"{m['role'].upper()}: {m['content']}"
-        for m in recent_messages[-6:]  # Last 3 exchanges
-    ])
+    conversation_text = "\n".join(
+        [
+            f"{m['role'].upper()}: {m['content']}"
+            for m in recent_messages[-6:]  # Last 3 exchanges
+        ]
+    )
 
-    drift_text = f"\n\nIMPORTANT: Previous answer went off-track. Suggested redirect: {drift_redirect}" if drift_redirect else ""
+    drift_text = (
+        f"\n\nIMPORTANT: Previous answer went off-track. Suggested redirect: {drift_redirect}"
+        if drift_redirect
+        else ""
+    )
 
     return f"""Investigation goals:
 {goals_text}
@@ -461,32 +475,40 @@ def build_analysis_prompt(session_data: dict) -> str:
         session_data: Dict containing incident_name, summary, goals, facts, messages, turn_count
     """
     # Format goals with confidence scores
-    goals_text = "\n".join([
-        f"- {g['description']} (confidence: {g.get('confidence', 0)}%, status: {g.get('status', 'not_started')})"
-        for g in session_data['goals']
-    ])
+    goals_text = "\n".join(
+        [
+            f"- {g['description']} (confidence: {g.get('confidence', 0)}%, status: {g.get('status', 'not_started')})"
+            for g in session_data["goals"]
+        ]
+    )
 
     # Format facts with confidence and timestamps
-    facts_text = "\n".join([
-        f"- [{f.get('confidence', 'uncertain')}] {f['claim']}" +
-        (f" (at {f['timestamp']})" if f.get('timestamp') else "")
-        for f in session_data['facts']
-    ])
+    facts_text = "\n".join(
+        [
+            f"- [{f.get('confidence', 'uncertain')}] {f['claim']}"
+            + (f" (at {f['timestamp']})" if f.get("timestamp") else "")
+            for f in session_data["facts"]
+        ]
+    )
 
     # Format conversation messages
-    messages_text = "\n".join([
-        f"{m['role'].upper()}: {m['content']}"
-        for m in session_data.get('messages', [])
-    ])
+    messages_text = "\n".join(
+        [
+            f"{m['role'].upper()}: {m['content']}"
+            for m in session_data.get("messages", [])
+        ]
+    )
 
     # Get turn count
-    turn_count = session_data.get('turn_count', len(session_data.get('messages', [])) // 2)
+    turn_count = session_data.get(
+        "turn_count", len(session_data.get("messages", [])) // 2
+    )
 
     return f"""Complete interview session data:
 
 INCIDENT DETAILS:
-- Name: {session_data['incident_name']}
-- Initial Summary: {session_data['summary']}
+- Name: {session_data["incident_name"]}
+- Initial Summary: {session_data["summary"]}
 - Total Interview Turns: {turn_count}
 
 INVESTIGATION GOALS (with confidence scores):

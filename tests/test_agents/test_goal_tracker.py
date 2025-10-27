@@ -1,15 +1,16 @@
-import pytest
 from unittest.mock import Mock
+
 from src.agents.goal_tracker import GoalTrackerAgent
 from src.api_client import ClaudeClient
-from src.models import Goal, Fact, GoalStatus
+from src.models import Fact, Goal, GoalStatus
+
 
 def test_update_goals():
     # Create mock client
     mock_client = Mock(spec=ClaudeClient)
 
     # Mock response with updated confidence scores
-    mock_response = '''[
+    mock_response = """[
         {
             "goal": "Establish chronological timeline of events",
             "confidence": 75,
@@ -22,7 +23,7 @@ def test_update_goals():
             "status": "complete",
             "reasoning": "All major parties identified and their roles are clear"
         }
-    ]'''
+    ]"""
     mock_client.call.return_value = mock_response
 
     # Mock extract_json_from_response to return list of goal update dicts
@@ -31,14 +32,14 @@ def test_update_goals():
             "goal": "Establish chronological timeline of events",
             "confidence": 75,
             "status": "in_progress",
-            "reasoning": "We now have 3 time markers, but missing details about the middle period"
+            "reasoning": "We now have 3 time markers, but missing details about the middle period",
         },
         {
             "goal": "Identify all people involved and their roles",
             "confidence": 85,
             "status": "complete",
-            "reasoning": "All major parties identified and their roles are clear"
-        }
+            "reasoning": "All major parties identified and their roles are clear",
+        },
     ]
 
     # Create agent with mocked client
@@ -46,15 +47,23 @@ def test_update_goals():
 
     # Create initial goals with low confidence
     initial_goals = [
-        Goal(description="Establish chronological timeline of events", confidence=30, status=GoalStatus.IN_PROGRESS),
-        Goal(description="Identify all people involved and their roles", confidence=50, status=GoalStatus.IN_PROGRESS)
+        Goal(
+            description="Establish chronological timeline of events",
+            confidence=30,
+            status=GoalStatus.IN_PROGRESS,
+        ),
+        Goal(
+            description="Identify all people involved and their roles",
+            confidence=50,
+            status=GoalStatus.IN_PROGRESS,
+        ),
     ]
 
     # Create new facts that address the goals
     new_facts = [
         Fact(topic="timing", claim="Party started at 5pm", timestamp="5pm"),
         Fact(topic="timing", claim="Sarah arrived at 5:30pm", timestamp="5:30pm"),
-        Fact(topic="people", claim="Sarah, John, and Alex were at the party")
+        Fact(topic="people", claim="Sarah, John, and Alex were at the party"),
     ]
 
     # Call update_goals

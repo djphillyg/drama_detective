@@ -1,14 +1,15 @@
-from typing import Optional
 from src.api_client import ClaudeClient
+from src.models import Fact, Goal, GoalStatus
 from src.prompts import GOAL_TRACKER_SYSTEM, build_goal_tracker_prompt
-from src.models import Goal, Fact, GoalStatus
 
 
 class GoalTrackerAgent:
     def __init__(self, client: ClaudeClient):
         self.client = client
 
-    def update_goals(self, goals: list[Goal], new_facts: list[Fact], session_id: Optional[str] = None) -> list[Goal]:
+    def update_goals(
+        self, goals: list[Goal], new_facts: list[Fact], session_id: str | None = None
+    ) -> list[Goal]:
         # Return unchanged goals if no new facts
         if not new_facts:
             return goals
@@ -18,16 +19,12 @@ class GoalTrackerAgent:
             {
                 "description": g.description,
                 "confidence": g.confidence,
-                "status": g.status.value
+                "status": g.status.value,
             }
             for g in goals
         ]
         facts_dicts = [
-            {
-                "claim": f.claim,
-                "topic": f.topic,
-                "timestamp": f.timestamp
-            }
+            {"claim": f.claim, "topic": f.topic, "timestamp": f.timestamp}
             for f in new_facts
         ]
 
@@ -35,13 +32,17 @@ class GoalTrackerAgent:
         user_prompt = build_goal_tracker_prompt(goals_dicts, facts_dicts)
 
         # Call Claude API
-        response = self.client.call(GOAL_TRACKER_SYSTEM, user_prompt, session_id=session_id)
+        response = self.client.call(
+            GOAL_TRACKER_SYSTEM, user_prompt, session_id=session_id
+        )
 
         # Parse JSON response
         updates = self.client.extract_json_from_response(response)
 
         # Assert that we received a list (not a dict)
-        assert isinstance(updates, list), f"Expected list of goal updates, got {type(updates).__name__}"
+        assert isinstance(updates, list), (
+            f"Expected list of goal updates, got {type(updates).__name__}"
+        )
 
         # Create update map by goal description
         update_map = {update["goal"]: update for update in updates}
@@ -55,7 +56,7 @@ class GoalTrackerAgent:
                 updated_goal = Goal(
                     description=goal.description,
                     confidence=update["confidence"],
-                    status=GoalStatus(update["status"])
+                    status=GoalStatus(update["status"]),
                 )
                 updated_goals.append(updated_goal)
             else:

@@ -1,7 +1,8 @@
-import pytest
 from unittest.mock import Mock, patch
+
 from src.interview import InterviewOrchestrator
-from src.models import Session, SessionStatus, Goal, GoalStatus, Fact, Answer, Message
+from src.models import Answer, Fact, Goal, GoalStatus, Session, SessionStatus
+
 
 def test_orchestrator_initialization():
     # Create Session
@@ -9,11 +10,11 @@ def test_orchestrator_initialization():
         session_id="test-123",
         incident_name="Test Incident",
         created_at="2025-01-01T12:00:00",
-        status=SessionStatus.ACTIVE
+        status=SessionStatus.ACTIVE,
     )
 
     # Mock ClaudeClient to avoid real API calls
-    with patch('src.interview.ClaudeClient') as mock_client_class:
+    with patch("src.interview.ClaudeClient") as mock_client_class:
         mock_client = Mock()
         mock_client_class.return_value = mock_client
 
@@ -44,16 +45,22 @@ def test_process_answer_pipeline():
         status=SessionStatus.ACTIVE,
         current_question="What time did Sarah arrive?",
         goals=[
-            Goal(description="Establish timeline", confidence=30, status=GoalStatus.IN_PROGRESS),
-            Goal(description="Identify people involved", confidence=50, status=GoalStatus.IN_PROGRESS)
+            Goal(
+                description="Establish timeline",
+                confidence=30,
+                status=GoalStatus.IN_PROGRESS,
+            ),
+            Goal(
+                description="Identify people involved",
+                confidence=50,
+                status=GoalStatus.IN_PROGRESS,
+            ),
         ],
-        facts=[
-            Fact(topic="timing", claim="Party started at 5pm", timestamp="5pm")
-        ]
+        facts=[Fact(topic="timing", claim="Party started at 5pm", timestamp="5pm")],
     )
 
     # Mock ClaudeClient to avoid real API calls
-    with patch('src.interview.ClaudeClient') as mock_client_class:
+    with patch("src.interview.ClaudeClient") as mock_client_class:
         mock_client = Mock()
         mock_client_class.return_value = mock_client
 
@@ -63,21 +70,36 @@ def test_process_answer_pipeline():
         # Mock all agent methods
         # Mock fact_extractor
         mock_facts = [
-            Fact(topic="timing", claim="Sarah arrived at 5:30pm", timestamp="5:30pm", confidence="certain")
+            Fact(
+                topic="timing",
+                claim="Sarah arrived at 5:30pm",
+                timestamp="5:30pm",
+                confidence="certain",
+            )
         ]
         orchestrator.fact_extractor.extract_facts = Mock(return_value=mock_facts)
 
         # Mock drift_detector (no drift detected)
-        orchestrator.drift_detector.check_drift = Mock(return_value={
-            "addressed_question": True,
-            "drift_reason": None,
-            "redirect_suggestion": None
-        })
+        orchestrator.drift_detector.check_drift = Mock(
+            return_value={
+                "addressed_question": True,
+                "drift_reason": None,
+                "redirect_suggestion": None,
+            }
+        )
 
         # Mock goal_tracker
         updated_goals = [
-            Goal(description="Establish timeline", confidence=60, status=GoalStatus.IN_PROGRESS),
-            Goal(description="Identify people involved", confidence=70, status=GoalStatus.IN_PROGRESS)
+            Goal(
+                description="Establish timeline",
+                confidence=60,
+                status=GoalStatus.IN_PROGRESS,
+            ),
+            Goal(
+                description="Identify people involved",
+                confidence=70,
+                status=GoalStatus.IN_PROGRESS,
+            ),
         ]
         orchestrator.goal_tracker.update_goals = Mock(return_value=updated_goals)
 
@@ -87,18 +109,29 @@ def test_process_answer_pipeline():
             "target_goal": "Identify people involved",
             "reasoning": "Need to identify more attendees",
             "answers": [
-                {"answer": "John and Alex were there", "reasoning": "Provides specific names"},
-                {"answer": "A bunch of people", "reasoning": "Vague, indicates uncertainty"},
+                {
+                    "answer": "John and Alex were there",
+                    "reasoning": "Provides specific names",
+                },
+                {
+                    "answer": "A bunch of people",
+                    "reasoning": "Vague, indicates uncertainty",
+                },
                 {"answer": "I don't remember", "reasoning": "Shows lack of knowledge"},
-                {"answer": "Why does it matter?", "reasoning": "Red herring, indicates deflection"}
-            ]
+                {
+                    "answer": "Why does it matter?",
+                    "reasoning": "Red herring, indicates deflection",
+                },
+            ],
         }
-        orchestrator.question_generator.generate_question_with_answers = Mock(return_value=next_question_data)
+        orchestrator.question_generator.generate_question_with_answers = Mock(
+            return_value=next_question_data
+        )
 
         # Create answer from user
         user_answer = Answer(
             answer="She arrived at 5:30pm",
-            reasoning="Provides specific timeline information"
+            reasoning="Provides specific timeline information",
         )
 
         # Call process_answer()
@@ -106,7 +139,7 @@ def test_process_answer_pipeline():
 
         # Assert next question returned
         assert next_question == "Who else was at the party?"
-        assert is_complete == False
+        assert not is_complete
 
         # Assert turn_count incremented
         assert orchestrator.turn_count == 1
@@ -137,4 +170,3 @@ def test_process_answer_pipeline():
         # Assert answers were stored
         assert len(session.answers) == 4
         assert session.answers[0].answer == "John and Alex were there"
-        
