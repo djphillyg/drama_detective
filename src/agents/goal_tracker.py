@@ -1,3 +1,5 @@
+from typing import Optional
+
 from src.api_client import ClaudeClient
 from src.models import Fact, Goal, GoalStatus
 from src.prompts import GOAL_TRACKER_SYSTEM, build_goal_tracker_prompt
@@ -8,7 +10,7 @@ class GoalTrackerAgent:
         self.client = client
 
     def update_goals(
-        self, goals: list[Goal], new_facts: list[Fact], session_id: str | None = None
+        self, goals: list[Goal], new_facts: list[Fact], session_id: Optional[str] = None
     ) -> list[Goal]:
         # Return unchanged goals if no new facts
         if not new_facts:

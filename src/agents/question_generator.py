@@ -1,3 +1,5 @@
+from typing import Optional
+
 from src.api_client import ClaudeClient
 from src.models import Fact, Goal, Message
 from src.prompts import QUESTION_WITH_ANSWERS_SYSTEM, build_question_with_answers_prompt
@@ -14,7 +16,7 @@ class QuestionGeneratorAgent:
         facts: list[Fact],
         messages: list[Message],
         drift_redirect: str = "",
-        session_id: str | None = None,
+        session_id: Optional[str] = None,
     ) -> dict:
         # Calculate average confidence across goals
         avg_confidence = sum(g.confidence for g in goals) / len(goals) if goals else 0

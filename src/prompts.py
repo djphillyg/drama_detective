@@ -391,7 +391,7 @@ Return only the JSON array, no additional text."""
 
 
 def build_question_generator_prompt(
-    goals: list, facts: list, recent_messages: list, drift_redirect: str | None = None
+    goals: list, facts: list, recent_messages: list, drift_redirect: str = None
 ) -> str:
     goals_text = "\n".join(
         [

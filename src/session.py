@@ -2,12 +2,13 @@ import json
 import uuid
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 from src.models import Session
 
 
 class SessionManager:
-    def __init__(self, data_dir: Path | None = None):
+    def __init__(self, data_dir: Optional[Path] = None):
         # set data_dir
         # create directory if it doesnt exist
         if data_dir is None:

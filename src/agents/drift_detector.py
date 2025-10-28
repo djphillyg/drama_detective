@@ -1,3 +1,5 @@
+from typing import Optional
+
 from src.api_client import ClaudeClient
 from src.prompts import DRIFT_DETECTOR_SYSTEM, build_drift_detector_prompt
 
@@ -7,7 +9,7 @@ class DriftDetectorAgent:
         self.client = client
 
     def check_drift(
-        self, question: str, answer: str, session_id: str | None = None
+        self, question: str, answer: str, session_id: Optional[str] = None
     ) -> dict:
         # Build user prompt
         user_prompt = build_drift_detector_prompt(question, answer)

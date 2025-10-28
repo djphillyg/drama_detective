@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Union
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -24,7 +25,7 @@ class Fact(BaseModel):
     topic: str
     claim: str
     source: str = "user"
-    timestamp: str | None = None
+    timestamp: Union[str, None] = None
     confidence: str = Field(default="certain")  # "certain" or "uncertain"
 
 

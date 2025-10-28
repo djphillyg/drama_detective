@@ -1,6 +1,7 @@
 import json
 import re
 import time
+from typing import Optional, Union
 
 from anthropic import Anthropic
 from anthropic.types import TextBlock
@@ -27,9 +28,9 @@ class ClaudeClient:
         system_prompt: str,
         user_prompt: str,
         max_retries: int = 3,
-        session_id: str | None = None,
+        session_id: Optional[str] = None,
     ) -> str:
-        last_error: Exception | None = None
+        last_error: Optional[Exception] = None
 
         # Add session ID to system prompt to prevent cross-session context bleeding
         if session_id:
@@ -59,7 +60,7 @@ class ClaudeClient:
         # If we've exhausted all retries, raise the last error
         raise Exception(f"Failed after {max_retries} attempts: {last_error}")
 
-    def extract_json_from_response(self, response_text: str) -> dict | list:
+    def extract_json_from_response(self, response_text: str) -> Union[dict, list]:
         # Try different patterns in order of preference
         patterns = [
             r"```json\s*(.*?)\s*```",  # Markdown code block with json tag

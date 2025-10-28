@@ -1,3 +1,5 @@
+from typing import Optional
+
 from src.api_client import ClaudeClient
 from src.models import Answer, Fact
 from src.prompts import FACT_EXTRACTOR_SYSTEM, build_fact_extractor_prompt
@@ -10,7 +12,7 @@ class FactExtractorAgent:
         pass
 
     def extract_facts(
-        self, question: str, answer_obj: Answer, session_id: str | None = None
+        self, question: str, answer_obj: Answer, session_id: Optional[str] = None
     ) -> list[Fact]:
         """
         Extract facts from a user-selected answer.
