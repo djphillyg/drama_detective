@@ -1,16 +1,19 @@
 from rich.console import Console
 from rich.panel import Panel
 
+
 def format_report(analysis: dict, incident_name: str, console: Console):
     """Format and display the analysis report using Rich formatting"""
 
     # Print header with Panel
     console.print("\n")
-    console.print(Panel(
-        f"[bold cyan]{incident_name}[/bold cyan]\n[dim]Investigation Complete[/dim]",
-        title="🕵️ Final Analysis Report",
-        border_style="magenta"
-    ))
+    console.print(
+        Panel(
+            f"[bold cyan]{incident_name}[/bold cyan]\n[dim]Investigation Complete[/dim]",
+            title="🕵️ Final Analysis Report",
+            border_style="magenta",
+        )
+    )
 
     # Print timeline section
     if analysis.get("timeline"):
@@ -44,7 +47,9 @@ def format_report(analysis: dict, incident_name: str, console: Console):
         # Primary responsibility with percentage
         primary = verdict.get("primary_responsibility", "Unknown")
         percentage = verdict.get("percentage", 0)
-        console.print(f"  [bold]Primary Responsibility:[/bold] [red]{primary}[/red] ([red]{percentage}%[/red])")
+        console.print(
+            f"  [bold]Primary Responsibility:[/bold] [red]{primary}[/red] ([red]{percentage}%[/red])"
+        )
 
         # Reasoning
         reasoning = verdict.get("reasoning", "")

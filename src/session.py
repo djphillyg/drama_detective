@@ -1,9 +1,11 @@
 import json
 import uuid
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
-from src.models import Session, SessionStatus
+
+from src.models import Session
+
 
 class SessionManager:
     def __init__(self, data_dir: Optional[Path] = None):
@@ -17,15 +19,16 @@ class SessionManager:
             self.data_dir = Path(data_dir)
         self.data_dir.mkdir(parents=True, exist_ok=True)
         pass
+
     def create_session(self, incident_name: str) -> Session:
         # TODO: Create Session with:
         #   - Random UUID for session_id
         #   - Current timestamp for created_at
         #   - ACTIVE status
         session = Session(
-            session_id = str(uuid.uuid4()),
+            session_id=str(uuid.uuid4()),
             incident_name=incident_name,
-            created_at=datetime.now().isoformat()
+            created_at=datetime.now().isoformat(),
         )
         return session
 
@@ -34,7 +37,7 @@ class SessionManager:
         # Filename: {session_id}.json
         # Use session.model_dump() to serialize
         filename = self.data_dir / f"{session.session_id}.json"
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             json.dump(session.model_dump(), f, indent=2)
 
     def load_session(self, session_id: str) -> Session:
@@ -43,21 +46,21 @@ class SessionManager:
         # Use Session(**data) to deserialize
         filename = self.data_dir / f"{session_id}.json"
         try:
-            with open(filename, 'r') as f:
+            with open(filename) as f:
                 data = json.load(f)
             return Session(**data)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Session {session_id} not found")
+        except FileNotFoundError as err:
+            raise FileNotFoundError(f"Session {session_id} not found") from err
 
     def list_sessions(self) -> list[Session]:
         # TODO: Find all *.json files in data_dir
         # Load each one (skip corrupted files)
         # Return sorted by created_at (newest first)
         sessions = []
-        
+
         for json_file in self.data_dir.glob("*.json"):
             try:
-                with open(json_file, 'r') as f:
+                with open(json_file) as f:
                     data = json.load(f)
                 session = Session(**data)
                 sessions.append(session)

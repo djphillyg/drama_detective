@@ -1,9 +1,11 @@
-import pytest
 import tempfile
 import time
 from pathlib import Path
-from src.session import SessionManager
+
+import pytest
+
 from src.models import Session, SessionStatus
+from src.session import SessionManager
 
 
 class TestSessionManager:
@@ -24,7 +26,9 @@ class TestSessionManager:
         """Test that SessionManager creates the data directory"""
         # Create a subdirectory path that doesn't exist yet
         test_dir = temp_dir / "test_sessions"
-        assert not test_dir.exists(), "Directory should not exist before SessionManager creation"
+        assert not test_dir.exists(), (
+            "Directory should not exist before SessionManager creation"
+        )
 
         # Create SessionManager with non-existent directory
         manager = SessionManager(data_dir=test_dir)
@@ -32,7 +36,9 @@ class TestSessionManager:
         # Verify directory was created
         assert test_dir.exists(), "Directory should be created by SessionManager"
         assert test_dir.is_dir(), "Path should be a directory"
-        assert manager.data_dir == test_dir, "SessionManager should store correct data_dir"
+        assert manager.data_dir == test_dir, (
+            "SessionManager should store correct data_dir"
+        )
 
     def test_create_session(self, session_manager):
         """Test creating a new session"""
@@ -72,15 +78,23 @@ class TestSessionManager:
         loaded_session = session_manager.load_session(session_id)
 
         # Verify loaded session matches original
-        assert loaded_session.session_id == session.session_id, "Session ID should match"
-        assert loaded_session.incident_name == session.incident_name, "Incident name should match"
-        assert loaded_session.created_at == session.created_at, "Created timestamp should match"
+        assert loaded_session.session_id == session.session_id, (
+            "Session ID should match"
+        )
+        assert loaded_session.incident_name == session.incident_name, (
+            "Incident name should match"
+        )
+        assert loaded_session.created_at == session.created_at, (
+            "Created timestamp should match"
+        )
         assert loaded_session.status == session.status, "Status should match"
         assert loaded_session.summary == session.summary, "Summary should match"
         assert loaded_session.goals == session.goals, "Goals should match"
         assert loaded_session.messages == session.messages, "Messages should match"
         assert loaded_session.facts == session.facts, "Facts should match"
-        assert loaded_session.turn_count == session.turn_count, "Turn count should match"
+        assert loaded_session.turn_count == session.turn_count, (
+            "Turn count should match"
+        )
 
     def test_load_nonexistent_session(self, session_manager):
         """Test that loading a non-existent session raises FileNotFoundError"""
@@ -107,8 +121,12 @@ class TestSessionManager:
         assert len(sessions) == 2, "Should have 2 sessions in the list"
 
         # Verify sessions are sorted by created_at (newest first)
-        assert sessions[0].session_id == session2.session_id, "Newest session should be first"
-        assert sessions[1].session_id == session1.session_id, "Older session should be second"
+        assert sessions[0].session_id == session2.session_id, (
+            "Newest session should be first"
+        )
+        assert sessions[1].session_id == session1.session_id, (
+            "Older session should be second"
+        )
 
         # Verify session details
         session_ids = {s.session_id for s in sessions}
@@ -117,8 +135,12 @@ class TestSessionManager:
 
         # Verify incident names
         incident_names = {s.incident_name for s in sessions}
-        assert "First Incident" in incident_names, "First incident name should be in list"
-        assert "Second Incident" in incident_names, "Second incident name should be in list"
+        assert "First Incident" in incident_names, (
+            "First incident name should be in list"
+        )
+        assert "Second Incident" in incident_names, (
+            "Second incident name should be in list"
+        )
 
     def test_list_sessions_empty_directory(self, session_manager):
         """Test that list_sessions returns empty list when no sessions exist"""
@@ -138,4 +160,6 @@ class TestSessionManager:
         # List sessions should only return the valid one
         sessions = session_manager.list_sessions()
         assert len(sessions) == 1, "Should only return valid sessions"
-        assert sessions[0].session_id == session.session_id, "Should return the valid session"
+        assert sessions[0].session_id == session.session_id, (
+            "Should return the valid session"
+        )

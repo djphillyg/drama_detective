@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name="drama-detective",
@@ -14,6 +14,7 @@ setup(
     entry_points={
         "console_scripts": [
             "drama=src.cli:cli",
+            "drama-api=src.api_server:main",
         ],
     },
     python_requires=">=3.9",

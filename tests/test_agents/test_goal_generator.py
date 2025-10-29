@@ -1,8 +1,9 @@
-import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
+
 from src.agents.goal_generator import GoalGeneratorAgent
 from src.api_client import ClaudeClient
 from src.models import Goal
+
 
 def test_generate_goals():
     # Create mock client
@@ -16,7 +17,7 @@ def test_generate_goals():
     mock_client.extract_json_from_response.return_value = [
         "Find out who started the rumor",
         "Discover the timeline of events",
-        "Identify key witnesses"
+        "Identify key witnesses",
     ]
 
     # Create agent with mocked client

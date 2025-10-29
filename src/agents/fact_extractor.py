@@ -1,8 +1,8 @@
-import json
 from typing import Optional
+
 from src.api_client import ClaudeClient
+from src.models import Answer, Fact
 from src.prompts import FACT_EXTRACTOR_SYSTEM, build_fact_extractor_prompt
-from src.models import Fact, Answer
 
 
 class FactExtractorAgent:
@@ -11,7 +11,9 @@ class FactExtractorAgent:
         self.client = client
         pass
 
-    def extract_facts(self, question: str, answer_obj: Answer, session_id: Optional[str] = None) -> list[Fact]:
+    def extract_facts(
+        self, question: str, answer_obj: Answer, session_id: Optional[str] = None
+    ) -> list[Fact]:
         """
         Extract facts from a user-selected answer.
 
@@ -24,13 +26,13 @@ class FactExtractorAgent:
             List of Fact objects
         """
         # Build user prompt from question + answer object (convert to dict for prompt)
-        fact_gen_prompt: str = build_fact_extractor_prompt(question, answer_obj.model_dump())
+        fact_gen_prompt: str = build_fact_extractor_prompt(
+            question, answer_obj.model_dump()
+        )
 
         # Call Claude API
         response = self.client.call(
-            FACT_EXTRACTOR_SYSTEM,
-            fact_gen_prompt,
-            session_id=session_id
+            FACT_EXTRACTOR_SYSTEM, fact_gen_prompt, session_id=session_id
         )
 
         # Parse JSON response

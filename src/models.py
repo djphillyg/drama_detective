@@ -1,5 +1,6 @@
 from enum import Enum
-from typing import Optional
+from typing import Union
+
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -14,16 +15,17 @@ class Goal(BaseModel):
     status: GoalStatus = GoalStatus.NOT_STARTED
     confidence: int = Field(default=0)
 
-    @field_validator('confidence')
+    @field_validator("confidence")
     @classmethod
     def clamp_confidence(cls, v: int) -> int:
         return max(0, min(100, v))
+
 
 class Fact(BaseModel):
     topic: str
     claim: str
     source: str = "user"
-    timestamp: Optional[str] = None
+    timestamp: Union[str, None] = None
     confidence: str = Field(default="certain")  # "certain" or "uncertain"
 
 

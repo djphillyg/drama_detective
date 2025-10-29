@@ -1,14 +1,15 @@
-import pytest
 from unittest.mock import Mock
+
 from src.agents.agent_analysis import AnalysisAgent
 from src.api_client import ClaudeClient
+
 
 def test_generate_analysis():
     # Create mock client
     mock_client = Mock(spec=ClaudeClient)
 
     # Mock response with complete analysis
-    mock_response = '''{
+    mock_response = """{
         "timeline": [
             {"time": "3:00pm", "event": "Sarah agreed to bring dessert"},
             {"time": "5:00pm", "event": "Party started, no cake arrived"},
@@ -33,7 +34,7 @@ def test_generate_analysis():
             "drama_rating": 6,
             "drama_rating_explanation": "Moderate - Solvable with honest conversation"
         }
-    }'''
+    }"""
     mock_client.call.return_value = mock_response
 
     # Mock extract_json_from_response to return analysis dict
@@ -41,18 +42,18 @@ def test_generate_analysis():
         "timeline": [
             {"time": "3:00pm", "event": "Sarah agreed to bring dessert"},
             {"time": "5:00pm", "event": "Party started, no cake arrived"},
-            {"time": "5:30pm", "event": "Sarah arrived late without dessert"}
+            {"time": "5:30pm", "event": "Sarah arrived late without dessert"},
         ],
         "key_facts": [
             "Sarah was responsible for bringing dessert",
             "No confirmation was sent in group chat",
             "Alex sent a reminder that wasn't acknowledged",
-            "Sarah arrived 30 minutes late"
+            "Sarah arrived 30 minutes late",
         ],
         "gaps": [
             "Did Sarah actually see the reminder message?",
             "Was there any prior discussion about backup plans?",
-            "Why was Sarah late?"
+            "Why was Sarah late?",
         ],
         "verdict": {
             "primary_responsibility": "Sarah",
@@ -60,8 +61,8 @@ def test_generate_analysis():
             "reasoning": "Failed to confirm commitment and didn't communicate issues in advance",
             "contributing_factors": "Group didn't establish backup plan (30%)",
             "drama_rating": 6,
-            "drama_rating_explanation": "Moderate - Solvable with honest conversation"
-        }
+            "drama_rating_explanation": "Moderate - Solvable with honest conversation",
+        },
     }
 
     # Create agent with mocked client
@@ -73,13 +74,13 @@ def test_generate_analysis():
         "summary": "Sarah didn't bring the dessert to the party",
         "goals": [
             {"description": "Establish chronological timeline of events"},
-            {"description": "Identify all people involved"}
+            {"description": "Identify all people involved"},
         ],
         "facts": [
             {"claim": "Party started at 5pm"},
             {"claim": "Sarah arrived at 5:30pm"},
-            {"claim": "Sarah was responsible for dessert"}
-        ]
+            {"claim": "Sarah was responsible for dessert"},
+        ],
     }
 
     # Call generate_analysis

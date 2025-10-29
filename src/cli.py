@@ -25,14 +25,15 @@
 import click
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
 from rich.prompt import Prompt
-from src.session import SessionManager
-from src.interview import InterviewOrchestrator
-from src.models import Answer, SessionStatus
+from rich.table import Table
+
 from src.agents.agent_analysis import AnalysisAgent
 from src.api_client import ClaudeClient
+from src.interview import InterviewOrchestrator
+from src.models import Answer, SessionStatus
 from src.report_formatter import format_report
+from src.session import SessionManager
 
 console = Console()
 
@@ -44,17 +45,21 @@ def cli():
 
 
 @cli.command()
-@click.argument('incident_name')
+@click.argument("incident_name")
 def investigate(incident_name):
-    console.print(Panel(
-        f"[bold]Starting investigation:[/bold] [cyan]{incident_name}[/cyan]\n"
-        "[dim]Preparing interview questions...[/dim]",
-        title="🕵️ Drama Detective",
-        border_style="magenta"
-    ))
+    console.print(
+        Panel(
+            f"[bold]Starting investigation:[/bold] [cyan]{incident_name}[/cyan]\n"
+            "[dim]Preparing interview questions...[/dim]",
+            title="🕵️ Drama Detective",
+            border_style="magenta",
+        )
+    )
     # Prompt user for summary - use click.edit() for multi-line support
     console.print("\n[cyan]Describe what happened (editor will open):[/cyan]")
-    summary = click.edit("\n# Enter your incident summary below. Save and close to continue.\n# Lines starting with # will be ignored.\n\n")
+    summary = click.edit(
+        "\n# Enter your incident summary below. Save and close to continue.\n# Lines starting with # will be ignored.\n\n"
+    )
 
     # Validate summary is not empty (filter out comment lines)
     if not summary:
@@ -62,8 +67,12 @@ def investigate(incident_name):
         return
 
     # Remove comment lines and extra whitespace
-    summary_lines = [line for line in summary.split('\n') if line.strip() and not line.strip().startswith('#')]
-    summary = ' '.join(summary_lines).strip()
+    summary_lines = [
+        line
+        for line in summary.split("\n")
+        if line.strip() and not line.strip().startswith("#")
+    ]
+    summary = " ".join(summary_lines).strip()
 
     if not summary:
         console.print("[red]Error: Summary cannot be empty[/red]")
@@ -77,10 +86,10 @@ def investigate(incident_name):
     # Print first question
     console.print(f"\n[bold]First question:[/bold] [cyan]{first_question}[/cyan]")
     # Print first question
-    
+
     # Start interview loop
     is_complete = False
-    
+
     while True:
         # get the answers from the session.answers
         session_answers = session.answers
@@ -92,7 +101,9 @@ def investigate(incident_name):
 
         # Add custom answer option
         custom_letter = letters[len(session_answers)]
-        console.print(f"  [bold]{custom_letter})[/bold] [dim]Other (provide custom answer)[/dim]")
+        console.print(
+            f"  [bold]{custom_letter})[/bold] [dim]Other (provide custom answer)[/dim]"
+        )
 
         # Create list of valid letter choices including custom option
         valid_choices = [letters[i] for i in range(len(session_answers) + 1)]
@@ -113,7 +124,7 @@ def investigate(incident_name):
             # Create Answer object for custom answer with generic reasoning
             selected_answer = Answer(
                 answer=custom_answer_text,
-                reasoning="User provided custom answer not matching predefined options"
+                reasoning="User provided custom answer not matching predefined options",
             )
             selected_answer_text = custom_answer_text
         else:
@@ -132,7 +143,7 @@ def investigate(incident_name):
             run_analysis(session.session_id)
             break
         console.print(f"\n[bold]Next Question:[/bold] [cyan]{next_question}[/cyan]")
-      
+
 
 @cli.command()
 def list():
@@ -146,7 +157,9 @@ def list():
     # If empty, print helpful message
     if not sessions:
         console.print("\n[yellow]No sessions found.[/yellow]")
-        console.print("[dim]Start a new investigation with:[/dim] [cyan]drama investigate <incident_name>[/cyan]")
+        console.print(
+            "[dim]Start a new investigation with:[/dim] [cyan]drama investigate <incident_name>[/cyan]"
+        )
         return
 
     # Create Rich Table with columns
@@ -163,37 +176,43 @@ def list():
         session_id_short = session.session_id[:8]
 
         # Color-code status
-        status_colors = {
-            "complete": "green",
-            "active": "yellow",
-            "paused": "blue"
-        }
+        status_colors = {"complete": "green", "active": "yellow", "paused": "blue"}
         status_color = status_colors.get(session.status.value, "white")
-        status_display = f"[{status_color}]{session.status.value.upper()}[/{status_color}]"
+        status_display = (
+            f"[{status_color}]{session.status.value.upper()}[/{status_color}]"
+        )
 
         # Calculate average confidence from goals
         if session.goals:
-            avg_confidence = sum(g.confidence for g in session.goals) / len(session.goals)
+            avg_confidence = sum(g.confidence for g in session.goals) / len(
+                session.goals
+            )
             progress = f"{avg_confidence:.0f}%"
         else:
             progress = "0%"
 
         # Format timestamp (just show date part for readability)
-        created_display = session.created_at.split("T")[0] if "T" in session.created_at else session.created_at[:10]
+        created_display = (
+            session.created_at.split("T")[0]
+            if "T" in session.created_at
+            else session.created_at[:10]
+        )
 
         table.add_row(
             session_id_short,
             session.incident_name,
             status_display,
             progress,
-            created_display
+            created_display,
         )
 
     # Print table
     console.print("\n")
     console.print(table)
     console.print(f"\n[dim]Total sessions: {len(sessions)}[/dim]")
-    console.print("[dim]Resume a session with:[/dim] [cyan]drama resume <session_id>[/cyan]")
+    console.print(
+        "[dim]Resume a session with:[/dim] [cyan]drama resume <session_id>[/cyan]"
+    )
 
 
 def run_analysis(session_id: str):
@@ -201,15 +220,19 @@ def run_analysis(session_id: str):
     console = Console()
     session_manager = SessionManager()
     loaded_session = session_manager.load_session(session_id)
-    console.print(Panel(
-    f"[bold]Beginning Analysis:[/bold] [cyan]{loaded_session.incident_name}[/cyan]\n"
-    "[dim]Preparing the papers...[/dim]",
-    title="🧐 Drama Detective",
-    border_style="magenta"
-    ))
+    console.print(
+        Panel(
+            f"[bold]Beginning Analysis:[/bold] [cyan]{loaded_session.incident_name}[/cyan]\n"
+            "[dim]Preparing the papers...[/dim]",
+            title="🧐 Drama Detective",
+            border_style="magenta",
+        )
+    )
     # Create AnalysisAgent
     analysis_agent = AnalysisAgent(client=ClaudeClient())
-    analysis = analysis_agent.generate_analysis(loaded_session.model_dump(), session_id=loaded_session.session_id)
+    analysis = analysis_agent.generate_analysis(
+        loaded_session.model_dump(), session_id=loaded_session.session_id
+    )
     # Prepare session_data dict with model_dump()
     # Generate analysis
     format_report(analysis, loaded_session.incident_name, console)
@@ -217,14 +240,14 @@ def run_analysis(session_id: str):
 
 
 @cli.command()
-@click.argument('session_id')
+@click.argument("session_id")
 def analyze(session_id):
     """CLI command wrapper for analysis"""
     run_analysis(session_id)
 
 
 @cli.command()
-@click.argument('session_id')
+@click.argument("session_id")
 def resume(session_id):
     """Resume an investigation from a previous session"""
     # Load the session
@@ -234,30 +257,40 @@ def resume(session_id):
         session = session_manager.load_session(session_id)
     except FileNotFoundError:
         console.print(f"[red]Error: Session '{session_id}' not found[/red]")
-        console.print("[dim]Use[/dim] [cyan]drama list[/cyan] [dim]to see available sessions[/dim]")
+        console.print(
+            "[dim]Use[/dim] [cyan]drama list[/cyan] [dim]to see available sessions[/dim]"
+        )
         return
 
     # Display resume panel
-    console.print(Panel(
-        f"[bold]Resuming investigation:[/bold] [cyan]{session.incident_name}[/cyan]\n"
-        f"[dim]Session ID: {session_id[:8]}...[/dim]\n"
-        f"[dim]Turn count: {session.turn_count}[/dim]",
-        title="🕵️ Drama Detective",
-        border_style="magenta"
-    ))
+    console.print(
+        Panel(
+            f"[bold]Resuming investigation:[/bold] [cyan]{session.incident_name}[/cyan]\n"
+            f"[dim]Session ID: {session_id[:8]}...[/dim]\n"
+            f"[dim]Turn count: {session.turn_count}[/dim]",
+            title="🕵️ Drama Detective",
+            border_style="magenta",
+        )
+    )
 
     # Check if session is already complete
     if session.status == SessionStatus.COMPLETE:
         console.print("\n[yellow]This investigation is already complete.[/yellow]")
-        console.print(f"[dim]View the analysis with:[/dim] [cyan]drama analyze {session_id}[/cyan]")
+        console.print(
+            f"[dim]View the analysis with:[/dim] [cyan]drama analyze {session_id}[/cyan]"
+        )
         run_analysis(session.session_id)
         return
 
     # Show current question
     if session.current_question:
-        console.print(f"\n[bold]Current question:[/bold] [cyan]{session.current_question}[/cyan]")
+        console.print(
+            f"\n[bold]Current question:[/bold] [cyan]{session.current_question}[/cyan]"
+        )
     else:
-        console.print("[red]Error: Session has no current question. Session may be corrupted.[/red]")
+        console.print(
+            "[red]Error: Session has no current question. Session may be corrupted.[/red]"
+        )
         return
 
     # Create InterviewOrchestrator with loaded session
@@ -276,7 +309,9 @@ def resume(session_id):
 
         # Add custom answer option
         custom_letter = letters[len(session_answers)]
-        console.print(f"  [bold]{custom_letter})[/bold] [dim]Other (provide custom answer)[/dim]")
+        console.print(
+            f"  [bold]{custom_letter})[/bold] [dim]Other (provide custom answer)[/dim]"
+        )
 
         # Create list of valid letter choices including custom option
         valid_choices = [letters[i] for i in range(len(session_answers) + 1)]
@@ -297,7 +332,7 @@ def resume(session_id):
             # Create Answer object for custom answer with generic reasoning
             selected_answer = Answer(
                 answer=custom_answer_text,
-                reasoning="User provided custom answer not matching predefined options"
+                reasoning="User provided custom answer not matching predefined options",
             )
             selected_answer_text = custom_answer_text
         else:
@@ -320,5 +355,5 @@ def resume(session_id):
         console.print(f"\n[bold]Next Question:[/bold] [cyan]{next_question}[/cyan]")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()
