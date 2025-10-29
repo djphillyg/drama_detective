@@ -1,0 +1,42 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: drama-detective-backend
+    ports:
+      - "5001:5000"
+    env_file:
+      - ./backend/.env.development
+    environment:
+      - FLASK_APP=src.api.app
+      - FLASK_ENV=development
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./backend:/app
+      - /app/.pytest_cache
+    command: python -m flask run --host=0.0.0.0 --port=5000
+    networks:
+      - drama-detective-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: drama-detective-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://backend:5000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - drama-detective-network
+
+networks:
+  drama-detective-network:
+    driver: bridge
