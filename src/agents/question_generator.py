@@ -17,6 +17,8 @@ class QuestionGeneratorAgent:
         messages: list[Message],
         drift_redirect: str = "",
         session_id: Optional[str] = None,
+        interviewee_name: str = "",
+        interviewee_role: str = "",
     ) -> dict:
         # Calculate average confidence across goals
         avg_confidence = sum(g.confidence for g in goals) / len(goals) if goals else 0
@@ -38,12 +40,12 @@ class QuestionGeneratorAgent:
 
         # Build user prompt (include drift_redirect if present)
         user_prompt = build_question_with_answers_prompt(
-            goals_dicts, facts_dicts, messages_dicts, drift_redirect
+            goals_dicts, facts_dicts, messages_dicts, drift_redirect, interviewee_name, interviewee_role
         )
 
         # Call Claude API
         response = self.client.call(
-            QUESTION_WITH_ANSWERS_SYSTEM, user_prompt, session_id=session_id
+            QUESTION_WITH_ANSWERS_SYSTEM, user_prompt, session_id=session_id, use_cache=True
         )
         cleaned_json = self.client.extract_json_from_response(response)
         assert isinstance(cleaned_json, dict), (

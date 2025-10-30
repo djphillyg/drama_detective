@@ -13,7 +13,7 @@ load_dotenv()
 class ClaudeClient:
     def __init__(
         self,
-        model: str = "claude-3-7-sonnet-latest",
+        model: str = "claude-sonnet-4-5-20250929",
         temperature: float = 0.3,
         max_tokens: int = 4096,
     ):
@@ -29,6 +29,7 @@ class ClaudeClient:
         user_prompt: str,
         max_retries: int = 3,
         session_id: Optional[str] = None,
+        use_cache: bool = False,
     ) -> str:
         last_error: Optional[Exception] = None
 
@@ -38,11 +39,23 @@ class ClaudeClient:
 
         for attempt in range(max_retries):
             try:
+                # Format system prompt with cache control if enabled
+                if use_cache:
+                    system = [
+                        {
+                            "type": "text",
+                            "text": system_prompt,
+                            "cache_control": {"type": "ephemeral"}
+                        }
+                    ]
+                else:
+                    system = system_prompt
+
                 response = self.client.messages.create(
                     model=self.model,
                     max_tokens=self.max_tokens,
                     temperature=self.temperature,
-                    system=system_prompt,
+                    system=system, # type: ignore
                     messages=[{"role": "user", "content": user_prompt}],
                 )
                 # Assert first content block is TextBlock and extract text

@@ -35,7 +35,7 @@ class GoalTrackerAgent:
 
         # Call Claude API
         response = self.client.call(
-            GOAL_TRACKER_SYSTEM, user_prompt, session_id=session_id
+            GOAL_TRACKER_SYSTEM, user_prompt, session_id=session_id, use_cache=True
         )
 
         # Parse JSON response

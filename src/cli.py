@@ -55,8 +55,37 @@ def investigate(incident_name):
             border_style="magenta",
         )
     )
+
+    # Get interviewee context
+    console.print("\n[bold magenta]First, let me get some context...[/bold magenta]\n")
+
+    # Get name
+    interviewee_name = Prompt.ask(
+        "[cyan]What's your name?[/cyan]",
+        default="Anonymous"
+    )
+
+    # Get relationship to incident
+    console.print(f"\n[cyan]Hi {interviewee_name}, what's your relationship to this incident?[/cyan]")
+    console.print("  [bold]A)[/bold] I was directly involved")
+    console.print("  [bold]B)[/bold] I witnessed it happen")
+    console.print("  [bold]C)[/bold] Someone told me about it")
+    console.print("  [bold]D)[/bold] I'm friends with someone involved")
+
+    role_choice = Prompt.ask("Your answer", choices=["A", "B", "C", "D"])
+
+    role_map = {
+        "A": "participant",
+        "B": "witness",
+        "C": "secondhand",
+        "D": "friend"
+    }
+    interviewee_role = role_map[role_choice]
+
+    console.print(f"\n[green]Got it! Let's dive into the details.[/green]\n")
+
     # Prompt user for summary - use click.edit() for multi-line support
-    console.print("\n[cyan]Describe what happened (editor will open):[/cyan]")
+    console.print("[cyan]Describe what happened (editor will open):[/cyan]")
     summary = click.edit(
         "\n# Enter your incident summary below. Save and close to continue.\n# Lines starting with # will be ignored.\n\n"
     )
@@ -80,6 +109,11 @@ def investigate(incident_name):
     # Create SessionManager and new session
     session_manager = SessionManager()
     session = session_manager.create_session(incident_name)
+
+    # Store interviewee context in session
+    session.interviewee_name = interviewee_name
+    session.interviewee_role = interviewee_role
+
     # Create InterviewOrchestrator
     orchestrator = InterviewOrchestrator(session)
     first_question = orchestrator.initialize_investigation(summary)
@@ -262,10 +296,16 @@ def resume(session_id):
         )
         return
 
-    # Display resume panel
+    # Display resume panel with interviewee context
+    interviewee_info = ""
+    if session.interviewee_name:
+        role_display = session.interviewee_role.capitalize() if session.interviewee_role else "Unknown"
+        interviewee_info = f"[dim]Interviewing: {session.interviewee_name} ({role_display})[/dim]\n"
+
     console.print(
         Panel(
             f"[bold]Resuming investigation:[/bold] [cyan]{session.incident_name}[/cyan]\n"
+            f"{interviewee_info}"
             f"[dim]Session ID: {session_id[:8]}...[/dim]\n"
             f"[dim]Turn count: {session.turn_count}[/dim]",
             title="🕵️ Drama Detective",

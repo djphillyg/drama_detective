@@ -199,6 +199,7 @@ Example output:
 
 Guidelines for question generation:
 - Prioritize goals with lowest confidence scores
+- Do not hallucinate new people that have not been established by the user's summary or facts.
 - Reference previous answers to create natural conversation flow
 - Ask one clear question at a time (not compound unless closely related)
 - Use conversational tone, not interrogation style
@@ -391,7 +392,7 @@ Return only the JSON array, no additional text."""
 
 
 def build_question_generator_prompt(
-    goals: list, facts: list, recent_messages: list, drift_redirect: str = None
+    goals: list, facts: list, recent_messages: list, drift_redirect: str = ""
 ) -> str:
     goals_text = "\n".join(
         [
@@ -429,7 +430,7 @@ Return only the JSON object, no additional text."""
 
 
 def build_question_with_answers_prompt(
-    goals: list, facts: list, recent_messages: list, drift_redirect: str
+    goals: list, facts: list, recent_messages: list, drift_redirect: str, interviewee_name: str = "", interviewee_role: str = ""
 ) -> str:
     """Build prompt for merged question + answers generation."""
     goals_text = "\n".join(
@@ -454,7 +455,31 @@ def build_question_with_answers_prompt(
         else ""
     )
 
-    return f"""Investigation goals:
+    # Build interviewee context section
+    interviewee_context = ""
+    if interviewee_name or interviewee_role:
+        role_descriptions = {
+            "participant": "directly involved in the incident",
+            "witness": "witnessed the incident firsthand",
+            "secondhand": "heard about the incident from someone else",
+            "friend": "friends with someone involved in the incident"
+        }
+        role_desc = role_descriptions.get(interviewee_role, interviewee_role)
+
+        interviewee_context = f"""
+INTERVIEWEE CONTEXT:
+- Name: {interviewee_name or "Unknown"}
+- Role: {interviewee_role or "Unknown"} ({role_desc})
+
+Consider this person's perspective when generating questions:
+- What would they realistically know based on their role?
+- Adjust tone based on their relationship (gentle if participant, probing if secondhand)
+- Reference their name naturally in questions when appropriate
+- Consider potential bias based on their involvement level
+
+"""
+
+    return f"""{interviewee_context}Investigation goals:
 {goals_text}
 
 Facts gathered so far:

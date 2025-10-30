@@ -51,6 +51,8 @@ class InterviewOrchestrator:
             self.session.messages,
             drift_redirect="",
             session_id=self.session_id,
+            interviewee_name=self.session.interviewee_name,
+            interviewee_role=self.session.interviewee_role,
         )
         first_question = question_data["question"]
         self.session.current_question = question_data["question"]
@@ -109,6 +111,8 @@ class InterviewOrchestrator:
             self.session.messages,
             drift_redirect,
             session_id=self.session_id,
+            interviewee_name=self.session.interviewee_name,
+            interviewee_role=self.session.interviewee_role,
         )
 
         # Check if interview is complete
