@@ -17,6 +17,8 @@ def investigate():
         data = request.get_json()
         incident_name = data["incident_name"]
         summary: str = data["summary"]
+        interviewee_name = data.get("interviewee_name", "Anonymous")
+        relationship = data.get("relationship", "participant")
 
         # Validate required fields
         if not incident_name or not summary:
@@ -24,7 +26,11 @@ def investigate():
 
         # create session
         session_manager: SessionManager = SessionManager()
-        session: Session = session_manager.create_session(incident_name)
+        session: Session = session_manager.create_session(
+            incident_name,
+            interviewee_name=interviewee_name,
+            relationship=relationship
+        )
 
         # initialize investigation
         orchestrator: InterviewOrchestrator = InterviewOrchestrator(session)

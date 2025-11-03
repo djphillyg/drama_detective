@@ -17,13 +17,23 @@ import {
 export const startInvestigation = createAsyncThunk(
   'investigation/start',
   async (
-    { incidentName, summary }: { incidentName: string; summary: string },
+    {
+      incidentName,
+      summary,
+      intervieweeName,
+      relationship
+    }: {
+      incidentName: string;
+      summary: string;
+      intervieweeName?: string;
+      relationship?: string;
+    },
     { dispatch, rejectWithValue }
   ) => {
     try {
       dispatch(setStatus('investigating'));
 
-      const response = await api.investigate(incidentName, summary);
+      const response = await api.investigate(incidentName, summary, intervieweeName, relationship);
 
       dispatch(setSessionId(response.session_id));
       dispatch(setIncidentName(response.incident_name));

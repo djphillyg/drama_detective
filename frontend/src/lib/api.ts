@@ -26,13 +26,20 @@ async function fetchWithErrorHandling(url: string, options: RequestInit) {
 }
 
 export const api = {
-  async investigate(incidentName: string, summary: string): Promise<InvestigateResponse> {
+  async investigate(
+    incidentName: string,
+    summary: string,
+    intervieweeName?: string,
+    relationship?: string
+  ): Promise<InvestigateResponse> {
     return fetchWithErrorHandling(`${API_BASE}/investigate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         incident_name: incidentName,
-        summary
+        summary,
+        interviewee_name: intervieweeName,
+        relationship
       }),
     });
   },

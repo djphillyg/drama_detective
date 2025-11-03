@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
@@ -12,10 +13,14 @@ import { startInvestigation } from '@/store/thunks/investigationThunks';
 import { generateIncidentName } from '@/lib/utils/incidentName';
 import { toast } from 'sonner';
 
+type RelationshipType = 'participant' | 'witness' | 'secondhand' | 'friend';
+
 export default function DeetsPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [summary, setSummary] = useState('');
+  const [intervieweeName, setIntervieweeName] = useState('');
+  const [relationship, setRelationship] = useState<RelationshipType>('participant');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async () => {
@@ -31,7 +36,9 @@ export default function DeetsPage() {
 
       await dispatch(startInvestigation({
         incidentName,
-        summary: summary.trim()
+        summary: summary.trim(),
+        intervieweeName: intervieweeName.trim() || 'Anonymous',
+        relationship
       })).unwrap();
 
       // Navigate to question page on success
@@ -72,6 +79,66 @@ export default function DeetsPage() {
               <p className="text-xs text-muted-foreground text-right">
                 {summary.length} characters
               </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="name">What's your name?</Label>
+              <Input
+                id="name"
+                placeholder="Anonymous"
+                value={intervieweeName}
+                onChange={(e) => setIntervieweeName(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>What's your relationship to this incident?</Label>
+              <div className="space-y-2">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="relationship"
+                    value="participant"
+                    checked={relationship === 'participant'}
+                    onChange={(e) => setRelationship(e.target.value as RelationshipType)}
+                    className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm">I was directly involved</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="relationship"
+                    value="witness"
+                    checked={relationship === 'witness'}
+                    onChange={(e) => setRelationship(e.target.value as RelationshipType)}
+                    className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm">I witnessed it happen</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="relationship"
+                    value="secondhand"
+                    checked={relationship === 'secondhand'}
+                    onChange={(e) => setRelationship(e.target.value as RelationshipType)}
+                    className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm">Someone told me about it</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="relationship"
+                    value="friend"
+                    checked={relationship === 'friend'}
+                    onChange={(e) => setRelationship(e.target.value as RelationshipType)}
+                    className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm">I'm friends with someone involved</span>
+                </label>
+              </div>
             </div>
 
             <Button
