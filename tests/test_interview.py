@@ -29,6 +29,7 @@ def test_orchestrator_initialization():
         assert orchestrator.turn_count == 0
 
         # Assert agents are initialized
+        assert orchestrator.summary_extractor is not None
         assert orchestrator.goal_generator is not None
         assert orchestrator.fact_extractor is not None
         assert orchestrator.drift_detector is not None
@@ -170,3 +171,93 @@ def test_process_answer_pipeline():
         # Assert answers were stored
         assert len(session.answers) == 4
         assert session.answers[0].answer == "John and Alex were there"
+
+
+def test_initialize_investigation_uses_summary_extractor():
+    """Test that initialize_investigation calls summary extractor and passes result to goal generator"""
+    # Create session
+    session = Session(
+        session_id="test-extract-123",
+        incident_name="Test Incident",
+        created_at="2025-01-01T12:00:00",
+        status=SessionStatus.ACTIVE,
+    )
+
+    # Mock ClaudeClient to avoid real API calls
+    with patch("src.interview.ClaudeClient") as mock_client_class:
+        mock_client = Mock()
+        mock_client_class.return_value = mock_client
+
+        # Create orchestrator
+        orchestrator = InterviewOrchestrator(session)
+
+        # Mock summary extractor response
+        mock_extracted_summary = {
+            "actors": [
+                {
+                    "name": "Lamar",
+                    "role": "upset friend",
+                    "relationships": ["John's friend", "Rob's friend"],
+                    "emotional_state": "angry/hurt"
+                }
+            ],
+            "point_of_conflict": {
+                "primary": "John and Rob went to Mexico together, excluding Lamar",
+                "secondary": ["Lamar feels betrayed by friends"]
+            },
+            "general_details": {
+                "timeline_markers": ["trip to Mexico"],
+                "location_context": ["Mexico"],
+                "communication_history": ["no mention of how Lamar found out"],
+                "emotional_atmosphere": "tense, feelings of betrayal"
+            },
+            "missing_info": ["Was Lamar invited to Mexico?"]
+        }
+        orchestrator.summary_extractor.extract_summary = Mock(return_value=mock_extracted_summary)
+
+        # Mock goal generator to return goals
+        mock_goals = [
+            Goal(description="Understand why John and Rob excluded Lamar", status=GoalStatus.NOT_STARTED),
+            Goal(description="Clarify if Lamar was invited", status=GoalStatus.NOT_STARTED),
+        ]
+        orchestrator.goal_generator.generate_goals = Mock(return_value=mock_goals)
+
+        # Mock question generator
+        mock_question_data = {
+            "question": "How did you find out about the trip?",
+            "target_goal": "Understand why John and Rob excluded Lamar",
+            "reasoning": "Need to understand communication",
+            "answers": [
+                {"answer": "They told me", "reasoning": "Direct communication"},
+                {"answer": "I saw it on social media", "reasoning": "Indirect discovery"},
+                {"answer": "Someone else told me", "reasoning": "Third party"},
+                {"answer": "I don't want to talk about it", "reasoning": "Avoidance"},
+            ],
+        }
+        orchestrator.question_generator.generate_question_with_answers = Mock(
+            return_value=mock_question_data
+        )
+
+        # Call initialize_investigation
+        raw_summary = "Lamar got really upset because John took Rob to Mexico and they're supposed to be his friends"
+        first_question = orchestrator.initialize_investigation(raw_summary)
+
+        # Assert summary extractor was called with raw summary
+        orchestrator.summary_extractor.extract_summary.assert_called_once_with(
+            raw_summary, session_id=session.session_id
+        )
+
+        # Assert extracted summary was stored in session
+        assert session.extracted_summary == mock_extracted_summary
+
+        # Assert goal generator was called with extracted summary (not raw summary)
+        orchestrator.goal_generator.generate_goals.assert_called_once()
+        call_args = orchestrator.goal_generator.generate_goals.call_args
+        # The first positional argument should be the extracted summary
+        assert call_args[0][0] == mock_extracted_summary
+
+        # Assert goals were stored in session
+        assert session.goals == mock_goals
+
+        # Assert first question returned
+        assert first_question == "How did you find out about the trip?"

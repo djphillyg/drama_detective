@@ -47,6 +47,7 @@ def cli():
 @cli.command()
 @click.argument("incident_name")
 def investigate(incident_name):
+    console.print("hello")
     console.print(
         Panel(
             f"[bold]Starting investigation:[/bold] [cyan]{incident_name}[/cyan]\n"

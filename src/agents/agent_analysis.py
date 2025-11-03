@@ -2,6 +2,7 @@ from typing import Optional
 
 from src.api_client import ClaudeClient
 from src.prompts import ANALYSIS_SYSTEM, build_analysis_prompt
+from src.schemas import ANALYSIS_SCHEMA
 
 
 class AnalysisAgent:
@@ -14,16 +15,13 @@ class AnalysisAgent:
         # Build user prompt from session data
         user_prompt = build_analysis_prompt(session_data)
 
-        # Call Claude API
-        response = self.client.call(ANALYSIS_SYSTEM, user_prompt, session_id=session_id)
-
-        # Parse JSON response
-        analysis = self.client.extract_json_from_response(response)
-
-        # Assert that we received a dict (not a list)
-        assert isinstance(analysis, dict), (
-            f"Expected dict for analysis, got {type(analysis).__name__}"
+        # Call Claude API with tool schema enforcement
+        analysis = self.client.call_with_tool(
+            ANALYSIS_SYSTEM,
+            user_prompt,
+            ANALYSIS_SCHEMA,
+            session_id=session_id
         )
 
-        # Return analysis dict
+        # Schema guarantees valid dict structure
         return analysis

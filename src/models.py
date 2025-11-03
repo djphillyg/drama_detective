@@ -52,6 +52,7 @@ class Session(BaseModel):
     created_at: str
     status: SessionStatus = SessionStatus.ACTIVE
     summary: str = ""
+    extracted_summary: Union[dict, None] = None
     interviewee_name: str = ""
     interviewee_role: str = ""  # "participant", "witness", "secondhand", "friend"
     goals: list[Goal] = Field(default_factory=list)

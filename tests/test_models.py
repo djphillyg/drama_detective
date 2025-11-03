@@ -34,3 +34,50 @@ def test_session_creation():
     assert session.status == SessionStatus.ACTIVE
     assert len(session.goals) == 0
     assert session.turn_count == 0
+
+
+def test_session_with_extracted_summary():
+    """Test that Session can store extracted summary data"""
+    extracted_summary = {
+        "actors": [
+            {
+                "name": "Sarah",
+                "role": "birthday person",
+                "relationships": ["friend of John"],
+                "emotional_state": "upset"
+            }
+        ],
+        "point_of_conflict": {
+            "primary": "Forgotten cake",
+            "secondary": ["Lack of communication"]
+        },
+        "general_details": {
+            "timeline_markers": ["5pm"],
+            "location_context": ["party venue"],
+            "communication_history": ["no heads up about cake"],
+            "emotional_atmosphere": "tense"
+        },
+        "missing_info": ["Who was supposed to bring cake?"]
+    }
+
+    session = Session(
+        session_id="test-456",
+        incident_name="cake drama",
+        created_at=datetime.now().isoformat(),
+        extracted_summary=extracted_summary
+    )
+
+    assert session.extracted_summary == extracted_summary
+    assert session.extracted_summary["actors"][0]["name"] == "Sarah"
+    assert session.extracted_summary["point_of_conflict"]["primary"] == "Forgotten cake"
+
+
+def test_session_extracted_summary_defaults_to_none():
+    """Test that extracted_summary defaults to None if not provided"""
+    session = Session(
+        session_id="test-789",
+        incident_name="test incident",
+        created_at=datetime.now().isoformat(),
+    )
+
+    assert session.extracted_summary is None
