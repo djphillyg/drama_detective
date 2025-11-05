@@ -17,6 +17,30 @@ def investigate():
         data = request.get_json()
         incident_name = data["incident_name"]
         summary: str = data["summary"]
+        interviewee_name = data["interviewee_name"]
+        interviewee_role = data["interviewee_role"]
+        images = data["images"]
+        
+           # Process images into format for API client
+        image_data_list = []
+        if images:
+            for img_base64 in images:
+                # Detect media type from base64 prefix or default to jpeg
+                if img_base64.startswith('/9j/'):  # JPEG magic bytes
+                    media_type = "image/jpeg"
+                elif img_base64.startswith('iVBORw'):  # PNG magic bytes
+                    media_type = "image/png"
+                elif img_base64.startswith('R0lG'):  # GIF magic bytes
+                    media_type = "image/gif"
+                elif img_base64.startswith('UklGR'):  # WebP magic bytes
+                    media_type = "image/webp"
+                else:
+                    media_type = "image/jpeg"  # Default fallback
+
+                image_data_list.append({
+                    "data": img_base64,
+                    "media_type": media_type
+                })
 
         # Validate required fields
         if not incident_name or not summary:
@@ -24,11 +48,15 @@ def investigate():
 
         # create session
         session_manager: SessionManager = SessionManager()
-        session: Session = session_manager.create_session(incident_name)
+        session: Session = session_manager.create_session(incident_name, interviewee_name, interviewee_role)
 
         # initialize investigation
         orchestrator: InterviewOrchestrator = InterviewOrchestrator(session)
-        orchestrator.initialize_investigation(summary)
+        # Pass images to orchestrator (we'll update this next)
+        orchestrator.initialize_investigation(
+            summary if summary else "",
+            image_data_list=image_data_list
+        )
 
         session_manager.save_session(session)
         # Return response

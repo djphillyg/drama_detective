@@ -41,13 +41,15 @@ class InterviewOrchestrator:
             client=self.claude_client
         )
 
-    def initialize_investigation(self, summary: str) -> str:
+    def initialize_investigation(self, summary: str, image_data_list: list[dict]) -> str:
         # Store raw summary in session
         self.session.summary = summary
 
         # Extract structured summary using summary_extractor
         extracted_summary: ExtractedSummary = self.summary_extractor.extract_summary(
-            summary, session_id=self.session_id
+            summary,
+            image_data_list=image_data_list,
+            session_id=self.session_id
         )
         print(extracted_summary)
         # Store extracted summary in session
@@ -123,7 +125,7 @@ class InterviewOrchestrator:
             self.session.goals,
             self.session.facts,
             self.session.messages,
-            extracted_summary=self.session.extracted_summary,
+            extracted_summary=self.session.extracted_summary, # type: ignore
             drift_redirect=drift_redirect,
             session_id=self.session_id,
             interviewee_name=self.session.interviewee_name,

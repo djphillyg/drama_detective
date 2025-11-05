@@ -117,7 +117,7 @@ def investigate(incident_name):
 
     # Create InterviewOrchestrator
     orchestrator = InterviewOrchestrator(session)
-    first_question = orchestrator.initialize_investigation(summary)
+    first_question = orchestrator.initialize_investigation(summary, image_data_list=[])
     # Print first question
     console.print(f"\n[bold]First question:[/bold] [cyan]{first_question}[/cyan]")
     # Print first question

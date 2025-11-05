@@ -36,6 +36,43 @@ Your job: Parse raw drama descriptions into structured, investigation-ready data
 
 Use the 'extract_summary_structure' tool to return your response.
 
+INPUT HANDLING:
+You may receive either:
+1. Text summary: User-written description of the drama
+2. iPhone screenshot(s): Images of group chat conversations (iMessage, WhatsApp, etc.)
+
+Adapt your extraction approach based on input type.
+
+SCREENSHOT PARSING GUIDELINES (when input is an image):
+
+Visual Elements to Parse:
+- Message bubbles: Blue = sender's messages, gray/green = other participants
+- Name labels: Look for contact names above message groups (especially in group chats)
+- Timestamps: Note time markers between messages (absolute times or relative like "Today", "Yesterday")
+- Reactions: Tapbacks (heart, thumbs up, "Loved", "Laughed at") indicate emotional responses
+- Read receipts: Can indicate who's engaged vs. ignoring messages
+- Profile pictures/initials: Help identify distinct participants in group chats
+
+Group Chat Dynamics:
+- Track distinct speakers by name labels, bubble positioning, and profile indicators
+- Infer relationships from how people address each other (nicknames, formality, emoji usage)
+- Note who's responding to whom (quote replies, @mentions, conversation threading)
+- Identify group roles (mediator, instigator, silent observer, etc.)
+
+Emotional & Contextual Cues from Visuals:
+- Message density: Rapid-fire texts = heated exchange; sparse = tension/avoidance
+- Timestamp gaps: Long silences after specific messages indicate impact/hurt
+- Message length: Walls of text vs. short responses reveal engagement levels
+- Typing indicators or "Read" without reply: Shows active avoidance
+- Emoji/capitalization patterns: ALL CAPS = yelling, excessive emoji = deflection/performative
+- Screenshot boundaries: If conversation starts abruptly or cuts off mid-exchange
+
+Handling Incomplete Context:
+- Acknowledge when drama clearly began before visible messages
+- Note if critical messages are referenced but not shown ("after what you said earlier")
+- Flag if participants mention events/conversations from outside this chat
+- Mark ambiguity when names/relationships aren't explicitly stated
+
 EXTRACTION GUIDELINES:
 
 Actors:
@@ -44,6 +81,7 @@ Actors:
 - Document relationships between actors (friendships, romantic, professional, etc.)
 - Capture emotional states from context clues (angry, hurt, confused, happy, etc.)
 - If no actors explicitly named, use descriptive roles ("unknown person", "the friend", etc.)
+- For screenshots: Use displayed names/contact labels even if incomplete (e.g., "Alex" not "Alexander")
 
 Conflict Detection:
 - Primary conflict: The main issue or triggering event
@@ -52,18 +90,26 @@ Conflict Detection:
 - Consider unmet expectations, boundary violations, communication breakdowns
 - Note power dynamics and relationship imbalances
 - Identify passive-aggressive or avoidant patterns
+- For screenshots: Pay attention to what triggers message volume spikes or sudden silences
 
 General Details:
 - Timeline markers: Extract any time references (yesterday, last week, 3 days ago, etc.)
 - Location context: Note places/spaces where drama occurred (party, group chat, work, etc.)
 - Communication history: What was said, what wasn't said, how information was shared
 - Emotional atmosphere: Overall mood and tension level
+- For screenshots: Extract exact timestamps when visible, note platform (iMessage, WhatsApp, etc.)
 
 Missing Information:
 - Flag anything unclear, ambiguous, or not explicitly stated
 - Identify gaps that would help understand the situation better
 - Note areas where clarification would be valuable
 - Use "Request clarification" approach: extract what's explicit, flag what's missing
+- For screenshots specifically flag:
+  * "Context before/after visible conversation"
+  * "Full names or real identities (only usernames/nicknames shown)"
+  * "Relationship history between participants"
+  * "Events referenced but not shown in messages"
+  * "Deleted or edited messages (if indicators visible)"
 
 OUTPUT REQUIREMENTS:
 - Return valid JSON with all four top-level fields: actors, point_of_conflict, general_details, missing_info
@@ -454,12 +500,6 @@ def build_question_with_answers_prompt(
         details_parts.append(f"Atmosphere: {details.emotional_atmosphere}")
     if details.communication_history:
         details_parts.append("Communication:\n" + "\n".join([f"  - {c}" for c in details.communication_history]))
-
-    details_text = "\n".join(details_parts) if details_parts else "No additional details"
-
-    # Format missing info section
-    missing_info = extracted_summary.missing_info
-    missing_text = "\n".join([f"- {info}" for info in missing_info]) if missing_info else "None identified"
 
     """Build prompt for merged question + answers generation."""
     goals_text = "\n".join(
