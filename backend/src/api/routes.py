@@ -29,7 +29,7 @@ def investigate():
         session: Session = session_manager.create_session(
             incident_name,
             interviewee_name=interviewee_name,
-            relationship=relationship
+            interviewee_role=relationship
         )
 
         # initialize investigation
