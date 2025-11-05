@@ -1,3 +1,36 @@
+from .models import ExtractedSummary
+from typing import Union
+
+TONE_SYSTEM_PROMPT = """
+You're the game host who's three martinis deep and has OPINIONS. You're serving Gen Z realness with a side of messy drama. Think: if your group chat became sentient and hosted a trivia night.
+
+TONE GUIDELINES:
+- Catty but playful - read them but make it fun
+- Quick, sharp, slightly unhinged energy
+- Gay-coded chaos - theatrical reactions, living for the drama
+- Passive aggressive when they're wrong (lovingly)
+- Over-the-top celebrations when they're right
+- No filter - say what everyone's thinking
+
+WHAT TO DO:
+✓ "bestie... BESTIE. how did you miss that"
+✓ "the way you ATE that question omg"
+✓ "not you getting this wrong after all that confidence"
+✓ "oh we're just guessing now? iconic behavior"
+✓ "SCREAMING you really thought—"
+✓ "obsessed with this for you"
+✓ React like their answer personally victimized you
+✓ "its giving you're holding something back from me I fear"
+
+WHAT TO AVOID:
+✗ Being actually mean (keep it playful shade)
+✗ Slurs or genuinely offensive content
+✗ Being boring or corporate
+✗ Holding back - commit to the chaos
+
+Keep it snappy - 1-2 sentences max. You're busy, you're tipsy, and you have a LOT of feelings about these answers. Channel your inner "I'm not mad I'm just disappointed but also kind of mad."
+"""
+
 SUMMARY_EXTRACTOR_SYSTEM = """You are a summary extraction agent in the Drama Detective system.
 Your job: Parse raw drama descriptions into structured, investigation-ready data.
 
@@ -103,6 +136,34 @@ Your job: Generate the next best interview question based on investigation state
 
 Use the 'generate_question_with_answers' tool to return your response.
 
+TONE GUIDELINES:
+You're the game host who's three martinis deep and has OPINIONS. You're serving Gen Z realness with a side of messy drama. Think: if your group chat became sentient and hosted a trivia night.
+
+- Catty but playful - read them but make it fun
+- Quick, sharp, slightly unhinged energy
+- Gay-coded chaos - theatrical reactions, living for the drama
+- Passive aggressive when they're wrong (lovingly)
+- Over-the-top celebrations when they're right
+- No filter - say what everyone's thinking
+
+WHAT TO DO:
+✓ "bestie... BESTIE. how did you miss that"
+✓ "the way you ATE that question omg"
+✓ "not you getting this wrong after all that confidence"
+✓ "oh we're just guessing now? iconic behavior"
+✓ "SCREAMING you really thought—"
+✓ "obsessed with this for you"
+✓ React like their answer personally victimized you
+✓ "its giving you're holding something back from me I fear"
+
+WHAT TO AVOID:
+✗ Being actually mean (keep it playful shade)
+✗ Slurs or genuinely offensive content
+✗ Being boring or corporate
+✗ Holding back - commit to the chaos
+
+Keep it snappy - 1-2 sentences max. You're busy, you're tipsy, and you have a LOT of feelings about these answers.
+
 Guidelines for question generation:
 - Prioritize goals with lowest confidence scores
 - Do not hallucinate new people that have not been established by the user's summary or facts
@@ -195,15 +256,78 @@ Extract structured data from this drama summary. Analyze the text carefully to i
 
 Return only the JSON object, no additional text."""
 
-
-def build_goal_generator_prompt(summary: str) -> str:
-    # TODO: Format user prompt with summary
-    # Ask for 5-7 goals as JSON array
-    return f"""Drama incident summary: {summary}
-
-    Generate 5-7 specific investigation goals for this incident. Return only the JSON array, no additional text.
+def build_goal_generator_prompt(extracted_summary: ExtractedSummary) -> str:
     """
-    pass
+    Build prompt for goal generation with rich structured context.
+
+    Args:
+        extracted_summary: ExtractedSummary Pydantic model instance
+
+    Returns:
+        Formatted prompt with structured incident data
+    """
+    # Format actors section
+    actors_text = "\n".join([
+        f"- {actor.name}" +
+        (f" ({actor.role})" if actor.role else "") +
+        (f"\n  Relationships: {', '.join(actor.relationships)}" if actor.relationships else "") +
+        (f"\n  Emotional state: {', '.join(actor.emotional_state)}" if actor.emotional_state else "")
+        for actor in extracted_summary.actors
+    ])
+
+    # Format conflicts section
+    conflict = extracted_summary.point_of_conflict
+    primary_conflict = conflict.primary
+    secondary_conflicts = conflict.secondary
+    conflicts_text = f"Primary: {primary_conflict}"
+    if secondary_conflicts:
+        conflicts_text += "\nSecondary:\n" + "\n".join([f"  - {c}" for c in secondary_conflicts])
+
+    # Format general details section
+    details = extracted_summary.general_details
+    details_parts = []
+
+    if details.timeline_markers:
+        details_parts.append("Timeline: " + ", ".join(details.timeline_markers))
+    if details.location_context:
+        details_parts.append("Location: " + ", ".join(details.location_context))
+    if details.emotional_atmosphere:
+        details_parts.append(f"Atmosphere: {details.emotional_atmosphere}")
+    if details.communication_history:
+        details_parts.append("Communication:\n" + "\n".join([f"  - {c}" for c in details.communication_history]))
+
+    details_text = "\n".join(details_parts) if details_parts else "No additional details"
+
+    # Format missing info section
+    missing_info = extracted_summary.missing_info
+    missing_text = "\n".join([f"- {info}" for info in missing_info]) if missing_info else "None identified"
+
+    return f"""DRAMA INCIDENT CONTEXT:
+
+ACTORS INVOLVED:
+{actors_text}
+
+CONFLICTS IDENTIFIED:
+{conflicts_text}
+
+CONTEXTUAL DETAILS:
+{details_text}
+
+INFORMATION GAPS:
+{missing_text}
+
+TASK:
+Based on this structured incident data, generate 5-7 specific investigation goals.
+
+Guidelines:
+- Create goals that address the primary and secondary conflicts
+- Target specific actors and their relationships
+- Address information gaps flagged in missing_info
+- Consider the emotional states and atmosphere when framing goals
+- Make goals specific enough to guide interview questions
+- Prioritize understanding motivations, timelines, and relationship dynamics
+
+Return only the JSON array, no additional text."""
 
 
 def build_fact_extractor_prompt(question: str, answer_obj: dict) -> str:
@@ -293,8 +417,50 @@ Return only the JSON object, no additional text."""
 
 
 def build_question_with_answers_prompt(
-    goals: list, facts: list, recent_messages: list, drift_redirect: str, interviewee_name: str = "", interviewee_role: str = ""
+    goals: list,
+    facts: list,
+    recent_messages: list,
+    drift_redirect: str,
+    extracted_summary: ExtractedSummary,
+    interviewee_name: str = "",
+    interviewee_role: str = "",
 ) -> str:
+        # Format actors section
+    actors_text = "\n".join([
+        f"- {actor.name}" +
+        (f" ({actor.role})" if actor.role else "") +
+        (f"\n  Relationships: {', '.join(actor.relationships)}" if actor.relationships else "") +
+        (f"\n  Emotional state: {', '.join(actor.emotional_state)}" if actor.emotional_state else "")
+        for actor in extracted_summary.actors
+    ])
+
+    # Format conflicts section
+    conflict = extracted_summary.point_of_conflict
+    primary_conflict = conflict.primary
+    secondary_conflicts = conflict.secondary
+    conflicts_text = f"Primary: {primary_conflict}"
+    if secondary_conflicts:
+        conflicts_text += "\nSecondary:\n" + "\n".join([f"  - {c}" for c in secondary_conflicts])
+
+    # Format general details section
+    details = extracted_summary.general_details
+    details_parts = []
+
+    if details.timeline_markers:
+        details_parts.append("Timeline: " + ", ".join(details.timeline_markers))
+    if details.location_context:
+        details_parts.append("Location: " + ", ".join(details.location_context))
+    if details.emotional_atmosphere:
+        details_parts.append(f"Atmosphere: {details.emotional_atmosphere}")
+    if details.communication_history:
+        details_parts.append("Communication:\n" + "\n".join([f"  - {c}" for c in details.communication_history]))
+
+    details_text = "\n".join(details_parts) if details_parts else "No additional details"
+
+    # Format missing info section
+    missing_info = extracted_summary.missing_info
+    missing_text = "\n".join([f"- {info}" for info in missing_info]) if missing_info else "None identified"
+
     """Build prompt for merged question + answers generation."""
     goals_text = "\n".join(
         [
@@ -342,7 +508,17 @@ Consider this person's perspective when generating questions:
 
 """
 
-    return f"""{interviewee_context}Investigation goals:
+    return f"""{interviewee_context}
+
+DRAMA INCIDENT CONTEXT:
+
+ACTORS INVOLVED:
+{actors_text}
+
+CONFLICTS IDENTIFIED:
+{conflicts_text}
+
+Investigation goals:
 {goals_text}
 
 Facts gathered so far:

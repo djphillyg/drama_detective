@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from src.models import Session
+from .models import Session
 
 
 class SessionManager:

@@ -135,7 +135,10 @@ SUMMARY_EXTRACTOR_SCHEMA = {
                             "type": "array",
                             "items": {"type": "string"}
                         },
-                        "emotional_state": {"type": "string"}
+                        "emotional_state": {
+                            "type": "array",
+                            "items": {"type": "string"}
+                        }
                     },
                     "required": ["name", "role", "relationships", "emotional_state"]
                 }

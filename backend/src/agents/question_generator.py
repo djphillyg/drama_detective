@@ -1,9 +1,9 @@
 from typing import Optional
 
-from src.api_client import ClaudeClient
-from src.models import Fact, Goal, Message
-from src.prompts import QUESTION_WITH_ANSWERS_SYSTEM, build_question_with_answers_prompt
-from src.schemas import QUESTION_WITH_ANSWERS_SCHEMA
+from ..api_client import ClaudeClient
+from ..models import Fact, Goal, Message, ExtractedSummary, QuestionWithAnswers
+from ..prompts import QUESTION_WITH_ANSWERS_SYSTEM, build_question_with_answers_prompt
+from ..schemas import QUESTION_WITH_ANSWERS_SCHEMA
 
 
 class QuestionGeneratorAgent:
@@ -16,11 +16,12 @@ class QuestionGeneratorAgent:
         goals: list[Goal],
         facts: list[Fact],
         messages: list[Message],
+        extracted_summary: ExtractedSummary,
         drift_redirect: str = "",
         session_id: Optional[str] = None,
         interviewee_name: str = "",
         interviewee_role: str = "",
-    ) -> dict:
+    ) -> QuestionWithAnswers:
         # Calculate average confidence across goals
         avg_confidence = sum(g.confidence for g in goals) / len(goals) if goals else 0
 
@@ -41,11 +42,11 @@ class QuestionGeneratorAgent:
 
         # Build user prompt (include drift_redirect if present)
         user_prompt = build_question_with_answers_prompt(
-            goals_dicts, facts_dicts, messages_dicts, drift_redirect, interviewee_name, interviewee_role
+            goals_dicts, facts_dicts, messages_dicts, drift_redirect, extracted_summary, interviewee_name, interviewee_role
         )
 
         # Call Claude API with tool schema enforcement
-        question_data = self.client.call_with_tool(
+        response = self.client.call_with_tool(
             QUESTION_WITH_ANSWERS_SYSTEM,
             user_prompt,
             QUESTION_WITH_ANSWERS_SCHEMA,
@@ -53,8 +54,9 @@ class QuestionGeneratorAgent:
             use_cache=True
         )
 
-        # Schema guarantees valid structure - no extraction/assertion needed
+        # Override target_goal if investigation is nearly complete
         if avg_confidence > 90:
-            question_data["target_goal"] = "wrap_up"
+            response["target_goal"] = "wrap_up"
 
-        return question_data
+        # Convert dict response to QuestionWithAnswers Pydantic model
+        return QuestionWithAnswers.model_validate(response)

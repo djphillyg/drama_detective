@@ -1,9 +1,9 @@
 from typing import Optional
 
-from src.api_client import ClaudeClient
-from src.models import Goal, GoalStatus
-from src.prompts import GOAL_GENERATOR_SYSTEM, build_goal_generator_prompt
-from src.schemas import GOAL_GENERATOR_SCHEMA
+from ..api_client import ClaudeClient
+from ..models import Goal, GoalStatus, ExtractedSummary
+from ..prompts import GOAL_GENERATOR_SYSTEM, build_goal_generator_prompt
+from ..schemas import GOAL_GENERATOR_SCHEMA
 
 
 class GoalGeneratorAgent:
@@ -12,7 +12,7 @@ class GoalGeneratorAgent:
         self.client = client
         pass
 
-    def generate_goals(self, summary: str, session_id: Optional[str] = None) -> list[Goal]:
+    def generate_goals(self, summary: ExtractedSummary, session_id: Optional[str] = None) -> list[Goal]:
         user_goal_prompt: str = build_goal_generator_prompt(summary)
 
         # Call Claude API with tool schema enforcement
@@ -20,7 +20,8 @@ class GoalGeneratorAgent:
             GOAL_GENERATOR_SYSTEM,
             user_goal_prompt,
             GOAL_GENERATOR_SCHEMA,
-            session_id=session_id
+            session_id=session_id,
+            use_cache=True
         )
 
         # Schema guarantees response["goals"] is a list of strings

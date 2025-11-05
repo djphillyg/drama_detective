@@ -1,8 +1,10 @@
 from rich.console import Console
 from rich.panel import Panel
 
+from .models import AnalysisReport
 
-def format_report(analysis: dict, incident_name: str, console: Console):
+
+def format_report(analysis: AnalysisReport, incident_name: str, console: Console):
     """Format and display the analysis report using Rich formatting"""
 
     # Print header with Panel
@@ -16,66 +18,56 @@ def format_report(analysis: dict, incident_name: str, console: Console):
     )
 
     # Print timeline section
-    if analysis.get("timeline"):
+    if analysis.timeline:
         console.print("\n[bold]⏰ Timeline of Events[/bold]")
         console.print("─" * 50)
-        for event in analysis["timeline"]:
-            time = event.get("time", "Unknown")
-            description = event.get("event", "")
-            console.print(f"  [cyan]{time}[/cyan] - {description}")
+        for event in analysis.timeline:
+            console.print(f"  [cyan]{event.time}[/cyan] - {event.event}")
 
     # Print key facts section
-    if analysis.get("key_facts"):
+    if analysis.key_facts:
         console.print("\n[bold]📋 Key Facts Established[/bold]")
         console.print("─" * 50)
-        for fact in analysis["key_facts"]:
+        for fact in analysis.key_facts:
             console.print(f"  • {fact}")
 
     # Print gaps section (if any)
-    if analysis.get("gaps"):
+    if analysis.gaps:
         console.print("\n[bold]❓ Unanswered Questions[/bold]")
         console.print("─" * 50)
-        for gap in analysis["gaps"]:
+        for gap in analysis.gaps:
             console.print(f"  • [yellow]{gap}[/yellow]")
 
     # Print verdict section
-    verdict = analysis.get("verdict", {})
-    if verdict:
-        console.print("\n[bold]⚖️  The Verdict[/bold]")
-        console.print("─" * 50)
+    verdict = analysis.verdict
+    console.print("\n[bold]⚖️  The Verdict[/bold]")
+    console.print("─" * 50)
 
-        # Primary responsibility with percentage
-        primary = verdict.get("primary_responsibility", "Unknown")
-        percentage = verdict.get("percentage", 0)
-        console.print(
-            f"  [bold]Primary Responsibility:[/bold] [red]{primary}[/red] ([red]{percentage}%[/red])"
-        )
+    # Primary responsibility with percentage
+    console.print(
+        f"  [bold]Primary Responsibility:[/bold] [red]{verdict.primary_responsibility}[/red] ([red]{verdict.percentage}%[/red])"
+    )
 
-        # Reasoning
-        reasoning = verdict.get("reasoning", "")
-        if reasoning:
-            console.print(f"  [bold]Reasoning:[/bold] {reasoning}")
+    # Reasoning
+    if verdict.reasoning:
+        console.print(f"  [bold]Reasoning:[/bold] {verdict.reasoning}")
 
-        # Contributing factors
-        contributing = verdict.get("contributing_factors", "")
-        if contributing:
-            console.print(f"  [bold]Contributing Factors:[/bold] {contributing}")
+    # Contributing factors
+    if verdict.contributing_factors:
+        console.print(f"  [bold]Contributing Factors:[/bold] {verdict.contributing_factors}")
 
-        # Print drama rating
-        drama_rating = verdict.get("drama_rating", 0)
-        drama_explanation = verdict.get("drama_rating_explanation", "")
+    # Print drama rating
+    console.print("\n[bold]🔥 Drama Rating[/bold]")
+    console.print("─" * 50)
+    console.print(f"  [bold]{verdict.drama_rating}/10[/bold]")
 
-        console.print("\n[bold]🔥 Drama Rating[/bold]")
-        console.print("─" * 50)
-        console.print(f"  [bold]{drama_rating}/10[/bold]")
+    # Visual bar with fire emojis (1-10 scale)
+    fire_count = verdict.drama_rating
+    fire_bar = "🔥" * fire_count + "⬜" * (10 - fire_count)
+    console.print(f"  {fire_bar}")
 
-        # Visual bar with fire emojis (1-10 scale)
-        fire_count = drama_rating
-        fire_bar = "🔥" * fire_count + "⬜" * (10 - fire_count)
-        console.print(f"  {fire_bar}")
-
-        # Explanation
-        if drama_explanation:
-            console.print(f"  {drama_explanation}")
+    # Explanation
+    if verdict.drama_rating_explanation:
+        console.print(f"  {verdict.drama_rating_explanation}")
 
     console.print("\n")

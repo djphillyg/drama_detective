@@ -2,9 +2,10 @@
 
 from typing import Optional
 
-from src.api_client import ClaudeClient
-from src.prompts import SUMMARY_EXTRACTOR_SYSTEM, build_summary_extractor_prompt
-from src.schemas import SUMMARY_EXTRACTOR_SCHEMA
+from ..api_client import ClaudeClient
+from ..prompts import SUMMARY_EXTRACTOR_SYSTEM, build_summary_extractor_prompt
+from ..schemas import SUMMARY_EXTRACTOR_SCHEMA
+from ..models import ExtractedSummary
 
 
 class SummaryExtractorAgent:
@@ -19,7 +20,7 @@ class SummaryExtractorAgent:
         """
         self.client = client
 
-    def extract_summary(self, raw_summary: str, session_id: Optional[str] = None) -> dict:
+    def extract_summary(self, raw_summary: str, session_id: Optional[str] = None) -> ExtractedSummary:
         """
         Extract structured data from raw drama summary.
 
@@ -28,7 +29,7 @@ class SummaryExtractorAgent:
             session_id: Optional session ID for caching
 
         Returns:
-            Dict with actors, point_of_conflict, general_details, missing_info
+            ExtractedSummary model with actors, point_of_conflict, general_details, missing_info
         """
         # Build user prompt
         user_prompt = build_summary_extractor_prompt(raw_summary)
@@ -43,5 +44,5 @@ class SummaryExtractorAgent:
         )
 
         # Schema guarantees response has all required fields
-        # Return the structured summary as-is
-        return response
+        # Convert dict response to ExtractedSummary Pydantic model
+        return ExtractedSummary.model_validate(response)

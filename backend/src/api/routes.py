@@ -1,11 +1,11 @@
 """API routes."""
 from flask import Blueprint, request, jsonify
 from flask_cors import CORS
-from src.interview import InterviewOrchestrator
-from src.agents.agent_analysis import AnalysisAgent
-from src.api_client import ClaudeClient
-from src.models import Session, Answer
-from src.session import SessionManager
+from ..interview import InterviewOrchestrator
+from ..agents.agent_analysis import AnalysisAgent
+from ..api_client import ClaudeClient
+from ..models import Session, Answer
+from ..session import SessionManager
 
 api_bp = Blueprint('api', __name__)
 

@@ -1,9 +1,9 @@
 from typing import Optional
 
-from src.api_client import ClaudeClient
-from src.models import Answer, Fact
-from src.prompts import FACT_EXTRACTOR_SYSTEM, build_fact_extractor_prompt
-from src.schemas import FACT_EXTRACTOR_SCHEMA
+from ..api_client import ClaudeClient
+from ..models import Answer, Fact
+from ..prompts import FACT_EXTRACTOR_SYSTEM, build_fact_extractor_prompt
+from ..schemas import FACT_EXTRACTOR_SCHEMA
 
 
 class FactExtractorAgent:
@@ -36,7 +36,8 @@ class FactExtractorAgent:
             FACT_EXTRACTOR_SYSTEM,
             fact_gen_prompt,
             FACT_EXTRACTOR_SCHEMA,
-            session_id=session_id
+            session_id=session_id,
+            use_cache=True
         )
 
         # Schema guarantees response["facts"] is a list of valid fact dicts

@@ -1,9 +1,9 @@
 from typing import Optional
 
-from src.api_client import ClaudeClient
-from src.models import Fact, Goal, GoalStatus
-from src.prompts import GOAL_TRACKER_SYSTEM, build_goal_tracker_prompt
-from src.schemas import GOAL_TRACKER_SCHEMA
+from ..api_client import ClaudeClient
+from ..models import Fact, Goal, GoalStatus
+from ..prompts import GOAL_TRACKER_SYSTEM, build_goal_tracker_prompt
+from ..schemas import GOAL_TRACKER_SCHEMA
 
 
 class GoalTrackerAgent:

@@ -28,12 +28,12 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
 
-from src.agents.agent_analysis import AnalysisAgent
-from src.api_client import ClaudeClient
-from src.interview import InterviewOrchestrator
-from src.models import Answer, SessionStatus
-from src.report_formatter import format_report
-from src.session import SessionManager
+from .agents.agent_analysis import AnalysisAgent
+from .api_client import ClaudeClient
+from .interview import InterviewOrchestrator
+from .models import Answer, SessionStatus
+from .report_formatter import format_report
+from .session import SessionManager
 
 console = Console()
 
@@ -109,7 +109,7 @@ def investigate(incident_name):
         return
     # Create SessionManager and new session
     session_manager = SessionManager()
-    session = session_manager.create_session(incident_name)
+    session = session_manager.create_session(incident_name, interviewee_name, interviewee_role)
 
     # Store interviewee context in session
     session.interviewee_name = interviewee_name

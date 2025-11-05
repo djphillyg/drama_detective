@@ -1,8 +1,9 @@
 from typing import Optional
 
-from src.api_client import ClaudeClient
-from src.prompts import DRIFT_DETECTOR_SYSTEM, build_drift_detector_prompt
-from src.schemas import DRIFT_DETECTOR_SCHEMA
+from ..api_client import ClaudeClient
+from ..models import DriftAnalysis
+from ..prompts import DRIFT_DETECTOR_SYSTEM, build_drift_detector_prompt
+from ..schemas import DRIFT_DETECTOR_SCHEMA
 
 
 class DriftDetectorAgent:
@@ -11,17 +12,29 @@ class DriftDetectorAgent:
 
     def check_drift(
         self, question: str, answer: str, session_id: Optional[str] = None
-    ) -> dict:
+    ) -> DriftAnalysis:
+        """
+        Check if an answer addressed the question asked.
+
+        Args:
+            question: The question that was asked
+            answer: The user's answer
+            session_id: Optional session ID for context isolation
+
+        Returns:
+            DriftAnalysis model with addressed_question, drift_reason, redirect_suggestion
+        """
         # Build user prompt
         user_prompt = build_drift_detector_prompt(question, answer)
 
         # Call Claude API with tool schema enforcement
-        drift_analysis = self.client.call_with_tool(
+        response = self.client.call_with_tool(
             DRIFT_DETECTOR_SYSTEM,
             user_prompt,
             DRIFT_DETECTOR_SCHEMA,
-            session_id=session_id
+            session_id=session_id,
+            use_cache=True
         )
 
-        # Schema guarantees valid dict structure
-        return drift_analysis
+        # Convert dict response to DriftAnalysis Pydantic model
+        return DriftAnalysis.model_validate(response)
