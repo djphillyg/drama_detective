@@ -3,6 +3,7 @@ from typing import Optional
 from src.api_client import ClaudeClient
 from src.models import Fact, Goal, GoalStatus
 from src.prompts import GOAL_TRACKER_SYSTEM, build_goal_tracker_prompt
+from src.schemas import GOAL_TRACKER_SCHEMA
 
 
 class GoalTrackerAgent:
@@ -33,18 +34,17 @@ class GoalTrackerAgent:
         # Build user prompt
         user_prompt = build_goal_tracker_prompt(goals_dicts, facts_dicts)
 
-        # Call Claude API
-        response = self.client.call(
-            GOAL_TRACKER_SYSTEM, user_prompt, session_id=session_id
+        # Call Claude API with tool schema enforcement
+        response = self.client.call_with_tool(
+            GOAL_TRACKER_SYSTEM,
+            user_prompt,
+            GOAL_TRACKER_SCHEMA,
+            session_id=session_id,
+            use_cache=True
         )
 
-        # Parse JSON response
-        updates = self.client.extract_json_from_response(response)
-
-        # Assert that we received a list (not a dict)
-        assert isinstance(updates, list), (
-            f"Expected list of goal updates, got {type(updates).__name__}"
-        )
+        # Schema guarantees response["goal_updates"] is a list of valid update dicts
+        updates = response["goal_updates"]
 
         # Create update map by goal description
         update_map = {update["goal"]: update for update in updates}

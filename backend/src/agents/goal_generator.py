@@ -3,6 +3,7 @@ from typing import Optional
 from src.api_client import ClaudeClient
 from src.models import Goal, GoalStatus
 from src.prompts import GOAL_GENERATOR_SYSTEM, build_goal_generator_prompt
+from src.schemas import GOAL_GENERATOR_SCHEMA
 
 
 class GoalGeneratorAgent:
@@ -12,24 +13,22 @@ class GoalGeneratorAgent:
         pass
 
     def generate_goals(self, summary: str, session_id: Optional[str] = None) -> list[Goal]:
-        # TODO: Build user prompt from summary
-        # Call Claude API with system + user prompt
-        # Parse JSON response (handle cases where response has extra text)
-        # Convert goal descriptions to Goal objects
-        # Return list of Goal objects
         user_goal_prompt: str = build_goal_generator_prompt(summary)
-        # call claude
-        response = self.client.call(
-            GOAL_GENERATOR_SYSTEM, user_goal_prompt, session_id=session_id
-        )
-        # clean the response
-        cleaned_json = self.client.extract_json_from_response(response)
-        assert isinstance(cleaned_json, list), (
-            f"Expected list of goal descriptions, got {type(cleaned_json).__name__}"
+
+        # Call Claude API with tool schema enforcement
+        response = self.client.call_with_tool(
+            GOAL_GENERATOR_SYSTEM,
+            user_goal_prompt,
+            GOAL_GENERATOR_SCHEMA,
+            session_id=session_id
         )
 
-        # extract out the descriptions to return a list of goals in the format
+        # Schema guarantees response["goals"] is a list of strings
+        goals_list = response["goals"]
+
+        # Convert goal descriptions to Goal objects
         list_goals: list[Goal] = [
-            Goal(description=s, status=GoalStatus.NOT_STARTED) for s in cleaned_json
+            Goal(description=goal_str, status=GoalStatus.NOT_STARTED)
+            for goal_str in goals_list
         ]
         return list_goals

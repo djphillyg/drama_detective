@@ -52,8 +52,9 @@ class Session(BaseModel):
     created_at: str
     status: SessionStatus = SessionStatus.ACTIVE
     summary: str = ""
-    interviewee_name: str = "Anonymous"
-    relationship: str = "participant"  # participant, witness, secondhand, friend
+    extracted_summary: Union[dict, None] = None
+    interviewee_name: str = ""
+    interviewee_role: str = ""  # "participant", "witness", "secondhand", "friend"
     goals: list[Goal] = Field(default_factory=list)
     messages: list[Message] = Field(default_factory=list)
     facts: list[Fact] = Field(default_factory=list)

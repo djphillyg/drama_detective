@@ -5,6 +5,7 @@ from src.agents.fact_extractor import FactExtractorAgent
 from src.agents.goal_generator import GoalGeneratorAgent
 from src.agents.goal_tracker import GoalTrackerAgent
 from src.agents.question_generator import QuestionGeneratorAgent
+from src.agents.summary_extractor import SummaryExtractorAgent
 from src.api_client import ClaudeClient
 from src.models import Answer, Message, Session, SessionStatus
 
@@ -21,6 +22,9 @@ class InterviewOrchestrator:
         self.turn_count = 0
         # Initialize all agent instances
         self.claude_client = ClaudeClient()
+        self.summary_extractor: SummaryExtractorAgent = SummaryExtractorAgent(
+            client=self.claude_client
+        )
         self.goal_generator: GoalGeneratorAgent = GoalGeneratorAgent(
             client=self.claude_client
         )
@@ -38,11 +42,19 @@ class InterviewOrchestrator:
         )
 
     def initialize_investigation(self, summary: str) -> str:
-        # TODO: Store summary in session
+        # Store raw summary in session
         self.session.summary = summary
-        # Use goal_generator to create goals
-        self.session.goals = self.goal_generator.generate_goals(
+
+        # Extract structured summary using summary_extractor
+        extracted_summary = self.summary_extractor.extract_summary(
             summary, session_id=self.session_id
+        )
+        # Store extracted summary in session
+        self.session.extracted_summary = extracted_summary
+
+        # Use goal_generator to create goals from extracted summary
+        self.session.goals = self.goal_generator.generate_goals(
+            extracted_summary, session_id=self.session_id
         )
         # Use question_generator to create first question
         question_data = self.question_generator.generate_question_with_answers(
@@ -51,6 +63,8 @@ class InterviewOrchestrator:
             self.session.messages,
             drift_redirect="",
             session_id=self.session_id,
+            interviewee_name=self.session.interviewee_name,
+            interviewee_role=self.session.interviewee_role,
         )
         first_question = question_data["question"]
         self.session.current_question = question_data["question"]
@@ -109,6 +123,8 @@ class InterviewOrchestrator:
             self.session.messages,
             drift_redirect,
             session_id=self.session_id,
+            interviewee_name=self.session.interviewee_name,
+            interviewee_role=self.session.interviewee_role,
         )
 
         # Check if interview is complete

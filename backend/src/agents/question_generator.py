@@ -3,6 +3,7 @@ from typing import Optional
 from src.api_client import ClaudeClient
 from src.models import Fact, Goal, Message
 from src.prompts import QUESTION_WITH_ANSWERS_SYSTEM, build_question_with_answers_prompt
+from src.schemas import QUESTION_WITH_ANSWERS_SCHEMA
 
 
 class QuestionGeneratorAgent:
@@ -17,6 +18,8 @@ class QuestionGeneratorAgent:
         messages: list[Message],
         drift_redirect: str = "",
         session_id: Optional[str] = None,
+        interviewee_name: str = "",
+        interviewee_role: str = "",
     ) -> dict:
         # Calculate average confidence across goals
         avg_confidence = sum(g.confidence for g in goals) / len(goals) if goals else 0
@@ -38,21 +41,20 @@ class QuestionGeneratorAgent:
 
         # Build user prompt (include drift_redirect if present)
         user_prompt = build_question_with_answers_prompt(
-            goals_dicts, facts_dicts, messages_dicts, drift_redirect
+            goals_dicts, facts_dicts, messages_dicts, drift_redirect, interviewee_name, interviewee_role
         )
 
-        # Call Claude API
-        response = self.client.call(
-            QUESTION_WITH_ANSWERS_SYSTEM, user_prompt, session_id=session_id
+        # Call Claude API with tool schema enforcement
+        question_data = self.client.call_with_tool(
+            QUESTION_WITH_ANSWERS_SYSTEM,
+            user_prompt,
+            QUESTION_WITH_ANSWERS_SCHEMA,
+            session_id=session_id,
+            use_cache=True
         )
-        cleaned_json = self.client.extract_json_from_response(response)
-        assert isinstance(cleaned_json, dict), (
-            f"Expected dict, got {type(cleaned_json)}"
-        )
-        # Parse JSON response
-        question_data: dict = cleaned_json
+
+        # Schema guarantees valid structure - no extraction/assertion needed
         if avg_confidence > 90:
             question_data["target_goal"] = "wrap_up"
 
-        # Return question and answers in the parsed format it came in
         return question_data

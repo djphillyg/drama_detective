@@ -3,6 +3,7 @@ from typing import Optional
 from src.api_client import ClaudeClient
 from src.models import Answer, Fact
 from src.prompts import FACT_EXTRACTOR_SYSTEM, build_fact_extractor_prompt
+from src.schemas import FACT_EXTRACTOR_SCHEMA
 
 
 class FactExtractorAgent:
@@ -30,46 +31,18 @@ class FactExtractorAgent:
             question, answer_obj.model_dump()
         )
 
-        # Call Claude API
-        response = self.client.call(
-            FACT_EXTRACTOR_SYSTEM, fact_gen_prompt, session_id=session_id
+        # Call Claude API with tool schema enforcement
+        response = self.client.call_with_tool(
+            FACT_EXTRACTOR_SYSTEM,
+            fact_gen_prompt,
+            FACT_EXTRACTOR_SCHEMA,
+            session_id=session_id
         )
 
-        # Parse JSON response
-        cleaned_json = self.client.extract_json_from_response(response)
-
-        # Handle case where Claude returns a dict instead of a list
-        if isinstance(cleaned_json, dict):
-            # Check for common dict structures
-            if "facts" in cleaned_json:
-                # Dict wrapping: {"facts": [...]}
-                cleaned_json = cleaned_json["facts"]
-            elif len(cleaned_json) == 0:
-                # Empty dict, treat as no facts
-                return []
-            else:
-                # Single fact returned as dict, wrap it in a list
-                cleaned_json = [cleaned_json]
-
-        # Ensure we have a list at this point
-        if not isinstance(cleaned_json, list):
-            raise ValueError(
-                f"Expected list of facts, got {type(cleaned_json).__name__}. "
-                f"Response: {cleaned_json}"
-            )
-
-        # Return empty list if no facts
-        if not cleaned_json:
-            return []
-
-        # Assert items in list are dicts, not strings
-        if cleaned_json:
-            assert isinstance(cleaned_json[0], dict), (
-                f"Expected list of fact objects (dicts), got list of {type(cleaned_json[0]).__name__}. "
-                f"First item: {cleaned_json[0]}"
-            )
+        # Schema guarantees response["facts"] is a list of valid fact dicts
+        facts_list = response["facts"]
 
         # Convert fact dicts to Fact objects
-        list_facts: list[Fact] = [Fact(**o) for o in cleaned_json]
+        list_facts: list[Fact] = [Fact(**fact_dict) for fact_dict in facts_list]
 
         return list_facts
