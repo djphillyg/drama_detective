@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AnalysisState } from '@/lib/types';
+import { AnalysisState, AnalysisData } from '@/lib/types';
 import { getRandomLoadingMessage } from '@/lib/utils/loadingMessages';
 
 const initialState: AnalysisState = {
@@ -18,7 +18,7 @@ const analysisSlice = createSlice({
         state.loadingMessage = getRandomLoadingMessage();
       }
     },
-    setAnalysisData: (state, action: PayloadAction<string>) => {
+    setAnalysisData: (state, action: PayloadAction<AnalysisData>) => {
       state.data = action.payload;
       state.isLoading = false;
     },

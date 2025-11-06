@@ -164,7 +164,7 @@ def get_analysis(session_id):
 
         return jsonify({
             'incident_name': session.incident_name,
-            'analysis': analysis
+            'analysis': analysis.model_dump()
         })
     except FileNotFoundError:
         return jsonify({'error': 'Session not found'}), 404

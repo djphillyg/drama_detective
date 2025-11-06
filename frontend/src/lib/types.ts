@@ -39,9 +39,30 @@ export interface AnswerResponse {
   message?: string;
 }
 
+export interface TimelineEvent {
+  time: string;
+  event: string;
+}
+
+export interface Verdict {
+  primary_responsibility: string;
+  percentage: number;
+  reasoning: string;
+  contributing_factors: string;
+  drama_rating: number;
+  drama_rating_explanation: string;
+}
+
+export interface AnalysisData {
+  timeline: TimelineEvent[];
+  key_facts: string[];
+  gaps: string[];
+  verdict: Verdict;
+}
+
 export interface AnalysisResponse {
   incident_name: string;
-  analysis: string;
+  analysis: AnalysisData;
 }
 
 // Frontend state types
@@ -75,7 +96,7 @@ export interface ProgressState {
 }
 
 export interface AnalysisState {
-  data: string | null;
+  data: AnalysisData | null;
   isLoading: boolean;
   loadingMessage: string;
 }
