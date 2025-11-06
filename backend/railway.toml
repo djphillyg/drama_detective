@@ -1,0 +1,8 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile.prod"
+
+[deploy]
+startCommand = "python3 src/api_server.py"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
