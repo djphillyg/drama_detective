@@ -26,7 +26,6 @@ const questionSlice = createSlice({
     setCustomAnswer: (state, action: PayloadAction<string>) => {
       state.customAnswer = action.payload;
       // Clear selected answer when user enters custom text
-      console.log(state.customAnswer.trim().length)
       if (action.payload.trim().length > 0) {
         state.selectedAnswerIndex = null;
       }

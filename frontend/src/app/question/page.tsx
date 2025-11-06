@@ -16,7 +16,6 @@ import {
   selectCanSubmitAnswer,
   selectAnswerToSubmit,
   selectTurnCount,
-  selectProgressPercentage,
   selectSessionStatus,
 } from '@/store/selectors';
 import {
@@ -25,7 +24,6 @@ import {
 } from '@/store/slices/questionSlice';
 import { submitAnswer } from '@/store/thunks/investigationThunks';
 import AnswerButton from '@/components/AnswerButton';
-import ProgressIndicator from '@/components/ProgressIndicator';
 import { toast } from 'sonner';
 
 const ANSWER_LETTERS = ['A', 'B', 'C', 'D'];
@@ -42,7 +40,6 @@ export default function QuestionPage() {
   const canSubmit = useAppSelector(selectCanSubmitAnswer);
   const answerToSubmit = useAppSelector(selectAnswerToSubmit);
   const turnCount = useAppSelector(selectTurnCount);
-  const progressPercentage = useAppSelector(selectProgressPercentage);
   const sessionStatus = useAppSelector(selectSessionStatus);
 
   // Redirect if no session
@@ -79,7 +76,7 @@ export default function QuestionPage() {
         // Will be redirected by useEffect
         return;
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to submit answer');
     }
   };
@@ -87,19 +84,28 @@ export default function QuestionPage() {
   if (!sessionId) return null;
 
   return (
-    <main className="min-h-screen p-4 bg-gradient-to-b from-background to-muted">
+    <main className="min-h-screen p-4 bg-gradient-pink">
       <div className="max-w-2xl mx-auto space-y-4">
-        <ProgressIndicator
-          turnCount={turnCount}
-          progressPercentage={progressPercentage}
-        />
-
         <Card>
           <CardContent className="pt-6 space-y-6">
-            <h2 className="text-xl font-semibold leading-relaxed">
-              {currentQuestion}
-            </h2>
+            {/* Header with title and progress */}
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-serif italic font-semibold text-card-foreground">
+                lets research mama! 📚✨
+              </h1>
+              <div className="bg-primary/90 text-white px-4 py-1.5 rounded-full text-sm font-medium">
+                Question {turnCount}
+              </div>
+            </div>
 
+            {/* Question */}
+            <div className="bg-card/80 rounded-2xl p-4 border border-pink-200">
+              <h2 className="text-lg font-serif italic leading-relaxed text-card-foreground">
+                {currentQuestion}
+              </h2>
+            </div>
+
+            {/* Answer Options */}
             <div className="space-y-3">
               {answerOptions.map((option, index) => (
                 <AnswerButton
@@ -113,25 +119,31 @@ export default function QuestionPage() {
               ))}
             </div>
 
+            {/* Custom Answer */}
             <div className="space-y-2 pt-4">
-              <Label htmlFor="custom-answer">Or write your own:</Label>
-              <Textarea
-                id="custom-answer"
-                placeholder="Type your custom answer here..."
-                value={customAnswer}
-                onChange={(e) => handleCustomAnswerChange(e.target.value)}
-                rows={3}
-                className="resize-none"
-              />
+              <div className="bg-card/80 rounded-2xl p-4 border border-pink-200">
+                <Label htmlFor="custom-answer" className="text-sm italic text-muted-foreground flex items-center gap-2">
+                  ✨ Other (write your own answer):
+                </Label>
+                <Textarea
+                  id="custom-answer"
+                  placeholder="Type your answer here..."
+                  value={customAnswer}
+                  onChange={(e) => handleCustomAnswerChange(e.target.value)}
+                  rows={3}
+                  className="resize-none mt-2"
+                />
+              </div>
             </div>
 
+            {/* Submit Button */}
             <Button
               size="lg"
-              className="w-full min-h-touch text-lg"
+              className="w-full min-h-touch text-lg font-medium"
               onClick={handleSubmit}
               disabled={!canSubmit}
             >
-              Submit
+              Next Question! →
             </Button>
           </CardContent>
         </Card>

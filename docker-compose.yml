@@ -5,17 +5,16 @@ services:
       dockerfile: Dockerfile
     container_name: drama-detective-backend
     ports:
-      - "5001:5000"
+      - "5000:5000"
     env_file:
-      - ./backend/.env.development
+      - .env
     environment:
-      - FLASK_APP=src.api.app
       - FLASK_ENV=development
       - PYTHONUNBUFFERED=1
     volumes:
       - ./backend:/app
       - /app/.pytest_cache
-    command: python -m flask run --host=0.0.0.0 --port=5000
+      - /app/drama_detective.egg-info
     networks:
       - drama-detective-network
 

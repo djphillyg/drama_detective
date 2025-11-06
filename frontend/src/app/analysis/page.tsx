@@ -129,8 +129,8 @@ export default function AnalysisPage() {
             <div>
               <h4 className="font-semibold text-sm mb-2">Primary Responsibility</h4>
               <p className="text-sm">
-                <span className="font-bold">{verdict.primary_responsibility}</span>
-                {' '}({verdict.percentage}% responsible)
+                <span className="font-bold text-2xl">{verdict.primary_responsibility}</span>
+                {' '}(<span className="text-red-500">{verdict.percentage}%</span> responsible)
               </p>
             </div>
             <div>
@@ -151,7 +151,7 @@ export default function AnalysisPage() {
         </AnalysisSection>
 
         {/* Timeline Section */}
-        {timeline && timeline.length > 0 && (
+        {/* {timeline && timeline.length > 0 && (
           <AnalysisSection title="Timeline" icon="⏱️">
             <div className="space-y-3">
               {timeline.map((event, index) => (
@@ -166,7 +166,7 @@ export default function AnalysisPage() {
               ))}
             </div>
           </AnalysisSection>
-        )}
+        )} */}
 
         {/* Key Facts Section */}
         {key_facts && key_facts.length > 0 && (
@@ -182,7 +182,7 @@ export default function AnalysisPage() {
         )}
 
         {/* Gaps Section */}
-        {gaps && gaps.length > 0 && (
+        {/* {gaps && gaps.length > 0 && (
           <AnalysisSection title="What's Still Unclear" icon="❓">
             <ul className="list-disc list-inside space-y-2">
               {gaps.map((gap, index) => (
@@ -192,7 +192,7 @@ export default function AnalysisPage() {
               ))}
             </ul>
           </AnalysisSection>
-        )}
+        )} */}
 
         {/* Share Button */}
         <div className="pt-4">

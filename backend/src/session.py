@@ -13,7 +13,7 @@ class SessionManager:
         # create directory if it doesnt exist
         if data_dir is None:
             # Use project root directory (two levels up from this file)
-            project_root = Path(__file__).parent.parent
+            project_root = Path(__file__).parent.parent.parent
             self.data_dir = project_root / ".drama" / ".sessions"
         else:
             self.data_dir = Path(data_dir)

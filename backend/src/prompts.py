@@ -58,7 +58,7 @@ Group Chat Dynamics:
 - Infer relationships from how people address each other (nicknames, formality, emoji usage)
 - Note who's responding to whom (quote replies, @mentions, conversation threading)
 - Identify group roles (mediator, instigator, silent observer, etc.)
-
+- The person with the blue texts can be assumed to be the interviewee if they have identified as being involved in the drama, otherwise this is missing info that needs to be addressed
 Emotional & Contextual Cues from Visuals:
 - Message density: Rapid-fire texts = heated exchange; sparse = tension/avoidance
 - Timestamp gaps: Long silences after specific messages indicate impact/hurt

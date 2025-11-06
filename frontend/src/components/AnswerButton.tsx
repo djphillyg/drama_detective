@@ -1,10 +1,9 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface AnswerButtonProps {
-  letter: string;
+  letter?: string;
   answer: string;
   isSelected: boolean;
   onClick: () => void;
@@ -12,25 +11,26 @@ interface AnswerButtonProps {
 }
 
 export default function AnswerButton({
-  letter,
   answer,
   isSelected,
   onClick,
   disabled = false,
 }: AnswerButtonProps) {
   return (
-    <Button
-      variant={isSelected ? 'default' : 'outline'}
+    <button
       className={cn(
-        'w-full h-auto min-h-touch text-left justify-start items-start p-4 text-base',
+        'w-full h-auto min-h-touch text-left justify-start items-start px-6 py-4 text-base rounded-3xl',
         'transition-all duration-200 whitespace-normal',
-        isSelected && 'ring-2 ring-primary ring-offset-2'
+        'border-2 border-(--card-border) bg-card/50 shadow-sm hover:bg-card hover:shadow-md',
+        'disabled:pointer-events-none disabled:opacity-50',
+        isSelected && 'bg-card shadow-md ring-2 ring-primary/50'
       )}
       onClick={onClick}
       disabled={disabled}
     >
-      <span className="font-bold mr-2 flex-shrink-0">{letter}:</span>
-      <span className="flex-1 break-words">{answer}</span>
-    </Button>
+      <span className="italic text-card-foreground flex items-center gap-2">
+        {answer}
+      </span>
+    </button>
   );
 }

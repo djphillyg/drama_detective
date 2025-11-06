@@ -8,3 +8,4 @@ pytest-mock>=3.12.0
 flask>=3.0.0
 flask-cors>=4.0.0  # if you need CORS
 ruff>=0.1.0  # fast Python linter and formatter
+pyjwt>=2.8.0

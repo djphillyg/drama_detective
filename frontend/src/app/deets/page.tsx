@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,6 +12,7 @@ import { useAppDispatch } from '@/store/hooks';
 import { startInvestigation } from '@/store/thunks/investigationThunks';
 import { generateIncidentName } from '@/lib/utils/incidentName';
 import { toast } from 'sonner';
+import { UploadIcon } from '@/components/UploadIcon';
 
 type RelationshipType = 'participant' | 'witness' | 'secondhand' | 'friend';
 
@@ -24,6 +25,8 @@ export default function DeetsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -81,6 +84,72 @@ export default function DeetsPage() {
     setImagePreviews(imagePreviews.filter((_, i) => i !== index));
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+
+    // Limit to 5 images total
+    const remainingSlots = 5 - images.length;
+    if (remainingSlots <= 0) {
+      toast.error('Maximum 5 images allowed');
+      return;
+    }
+
+    const filesToProcess = Array.from(files)
+      .filter(file => file.type.startsWith('image/'))
+      .slice(0, remainingSlots);
+
+    if (filesToProcess.length === 0) {
+      toast.error('Please drop image files only');
+      return;
+    }
+
+    try {
+      const newImages: string[] = [];
+      const newPreviews: string[] = [];
+
+      for (const file of filesToProcess) {
+        const previewUrl = URL.createObjectURL(file);
+        newPreviews.push(previewUrl);
+
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = reader.result as string;
+            const base64Data = result.split(',')[1];
+            resolve(base64Data);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        newImages.push(base64);
+      }
+
+      setImages([...images, ...newImages]);
+      setImagePreviews([...imagePreviews, ...newPreviews]);
+    } catch (error) {
+      toast.error('Failed to process images');
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
   const handleSubmit = async () => {
     // Validate at least text (10+ chars) OR images provided
     const hasValidText = summary.trim().length >= 10;
@@ -113,7 +182,7 @@ export default function DeetsPage() {
   };
 
   return (
-    <main className="min-h-screen p-4 bg-gradient-to-b from-background to-muted">
+    <main className="min-h-screen p-4 bg-gradient-pink">
       <div className="max-w-2xl mx-auto space-y-4">
         <Button
           variant="ghost"
@@ -126,19 +195,62 @@ export default function DeetsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">What's the drama?</CardTitle>
+            <CardTitle className="text-4xl font-serif italic text-card-foreground text-center">
+              🔥 DRAMA DETECTOR 🔥
+            </CardTitle>
+            <p className="text-base italic text-muted-foreground text-center">Spill the tea & get read! ☕</p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="images">Add screenshots (optional)</Label>
-              <Input
+              <Label htmlFor="images">Add screenshots</Label>
+
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
                 id="images"
                 type="file"
                 accept="image/*"
                 multiple
                 onChange={handleImageUpload}
                 disabled={images.length >= 5}
+                className="hidden"
               />
+
+              {/* Styled drag-and-drop area matching Figma */}
+              <div
+                onClick={handleUploadClick}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`
+                  relative flex flex-col items-center justify-center
+                  border-4 border-solid rounded-2xl
+                  bg-white/10 backdrop-blur-sm
+                  px-12 py-12 cursor-pointer
+                  transition-all duration-200
+                  ${isDragging
+                    ? 'border-[#c6005c] bg-white/20'
+                    : 'border-[#f6339a] hover:border-[#c6005c] hover:bg-white/15'
+                  }
+                  ${images.length >= 5 ? 'opacity-50 cursor-not-allowed' : ''}
+                `}
+                style={{ minHeight: '200px' }}
+              >
+                <UploadIcon className="mb-4" />
+                <p
+                  className="text-xl text-center mb-2 font-serif italic"
+                  style={{ color: '#861043' }}
+                >
+                  Drop your drama screenshot!
+                </p>
+                <p
+                  className="text-base text-center font-serif italic"
+                  style={{ color: '#c6005c' }}
+                >
+                  or click to browse
+                </p>
+              </div>
+
               <p className="text-xs text-muted-foreground">
                 Upload up to 5 screenshots of text messages, social media posts, etc.
               </p>
@@ -168,7 +280,7 @@ export default function DeetsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="summary">Tell us what happened</Label>
+              <Label htmlFor="summary">Add more context (optional)</Label>
               <Textarea
                 id="summary"
                 placeholder="My friend Sarah texted me saying that Rob told her that Alex was talking about me behind my back, but when I asked Alex about it..."
@@ -193,52 +305,57 @@ export default function DeetsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>What's your relationship to this incident?</Label>
-              <div className="space-y-2">
-                <label className="flex items-center space-x-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="relationship"
-                    value="participant"
-                    checked={relationship === 'participant'}
-                    onChange={(e) => setRelationship(e.target.value as RelationshipType)}
-                    className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <span className="text-sm">I was directly involved</span>
-                </label>
-                <label className="flex items-center space-x-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="relationship"
-                    value="witness"
-                    checked={relationship === 'witness'}
-                    onChange={(e) => setRelationship(e.target.value as RelationshipType)}
-                    className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <span className="text-sm">I witnessed it happen</span>
-                </label>
-                <label className="flex items-center space-x-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="relationship"
-                    value="secondhand"
-                    checked={relationship === 'secondhand'}
-                    onChange={(e) => setRelationship(e.target.value as RelationshipType)}
-                    className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <span className="text-sm">Someone told me about it</span>
-                </label>
-                <label className="flex items-center space-x-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="relationship"
-                    value="friend"
-                    checked={relationship === 'friend'}
-                    onChange={(e) => setRelationship(e.target.value as RelationshipType)}
-                    className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <span className="text-sm">I'm friends with someone involved</span>
-                </label>
+              <div className="bg-card/80 rounded-2xl p-4 border border-pink-200">
+                <Label className="text-sm italic text-muted-foreground flex items-center gap-2 mb-3">
+                  Tell us about yourself! 💅
+                </Label>
+                <p className="text-xs italic text-muted-foreground mb-3">What's your role in this drama?</p>
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => setRelationship('participant')}
+                    className={`w-full text-left px-6 py-4 text-sm rounded-3xl transition-all duration-200 border-2 border-(--card-border) bg-card/50 shadow-sm hover:bg-card hover:shadow-md ${
+                      relationship === 'participant' ? 'bg-card shadow-md ring-2 ring-primary/50' : ''
+                    }`}
+                  >
+                    <span className="italic text-card-foreground">
+                      🎭 I'm in it! (Main character energy)
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRelationship('witness')}
+                    className={`w-full text-left px-6 py-4 text-sm rounded-3xl transition-all duration-200 border-2 border-(--card-border) bg-card/50 shadow-sm hover:bg-card hover:shadow-md ${
+                      relationship === 'witness' ? 'bg-card shadow-md ring-2 ring-primary/50' : ''
+                    }`}
+                  >
+                    <span className="italic text-card-foreground">
+                      👀 Just watching (Eating popcorn)
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRelationship('secondhand')}
+                    className={`w-full text-left px-6 py-4 text-sm rounded-3xl transition-all duration-200 border-2 border-(--card-border) bg-card/50 shadow-sm hover:bg-card hover:shadow-md ${
+                      relationship === 'secondhand' ? 'bg-card shadow-md ring-2 ring-primary/50' : ''
+                    }`}
+                  >
+                    <span className="italic text-card-foreground">
+                      🕊️ The peacemaker (Trying to help)
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRelationship('friend')}
+                    className={`w-full text-left px-6 py-4 text-sm rounded-3xl transition-all duration-200 border-2 border-(--card-border) bg-card/50 shadow-sm hover:bg-card hover:shadow-md ${
+                      relationship === 'friend' ? 'bg-card shadow-md ring-2 ring-primary/50' : ''
+                    }`}
+                  >
+                    <span className="italic text-card-foreground">
+                      😈 Started it (No regrets)
+                    </span>
+                  </button>
+                </div>
               </div>
             </div>
 
