@@ -30,7 +30,8 @@ export const api = {
     incidentName: string,
     summary: string,
     intervieweeName?: string,
-    relationship?: string
+    relationship?: string,
+    images?: string[]
   ): Promise<InvestigateResponse> {
     return fetchWithErrorHandling(`${API_BASE}/investigate`, {
       method: 'POST',
@@ -39,7 +40,8 @@ export const api = {
         incident_name: incidentName,
         summary,
         interviewee_name: intervieweeName,
-        relationship
+        relationship,
+        images: images || []
       }),
     });
   },
