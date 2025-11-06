@@ -5,7 +5,7 @@ import {
   Answer
 } from './types';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 class ApiError extends Error {
   constructor(public status: number, message: string) {

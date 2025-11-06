@@ -13,7 +13,7 @@ load_dotenv()
 class ClaudeClient:
     def __init__(
         self,
-        model: str = "claude-sonnet-4-5-20250929",
+        model: str = "claude-haiku-4-5",
         temperature: float = 0.3,
         max_tokens: int = 4096,
     ):
