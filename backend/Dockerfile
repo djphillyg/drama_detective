@@ -34,5 +34,5 @@ EXPOSE 5000
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_ENV=development
 
-# Run the development server
-CMD ["python3", "src/api_server.py"]
+# Run the production server with gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "src.api.app:create_app()"]

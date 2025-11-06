@@ -1,9 +1,0 @@
-# Tell Railway/Nixpacks to NOT auto-detect, use Dockerfile only
-[phases.setup]
-nixPkgs = []
-
-[phases.build]
-cmds = []
-
-[start]
-cmd = "python3 src/api_server.py"
