@@ -15,7 +15,7 @@ class ClaudeClient:
         self,
         model: str = "claude-haiku-4-5",
         temperature: float = 0.3,
-        max_tokens: int = 4096,
+        max_tokens: int = 2048,
     ):
         self.model = model
         self.temperature = temperature

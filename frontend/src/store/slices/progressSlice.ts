@@ -19,6 +19,7 @@ const progressSlice = createSlice({
         factsCount?: number
       }>
     ) => {
+      console.log(action.payload)
       if (action.payload.turnCount !== undefined) {
         state.turnCount = action.payload.turnCount;
       }

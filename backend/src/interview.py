@@ -107,14 +107,16 @@ class InterviewOrchestrator:
         )
         # Add facts to session.facts
         self.session.facts.extend(gen_facts)
-        # Check drift every 3 turns using drift_detector
+
+        # MVP: Drift detection disabled for performance - re-enable for v2
         drift_redirect = ""
-        if self.turn_count % 3 == 0:
-            drift_analysis = self.drift_detector.check_drift(
-                self.session.current_question, answer.answer, session_id=self.session_id
-            )
-            if not drift_analysis.addressed_question:
-                drift_redirect = drift_analysis.redirect_suggestion
+        # if self.turn_count % 3 == 0:
+        #     drift_analysis = self.drift_detector.check_drift(
+        #         self.session.current_question, answer.answer, session_id=self.session_id
+        #     )
+        #     if not drift_analysis.addressed_question:
+        #         drift_redirect = drift_analysis.redirect_suggestion
+
         # Step 3: Update goal confidence scores
         self.session.goals = self.goal_tracker.update_goals(
             self.session.goals, gen_facts, session_id=self.session_id

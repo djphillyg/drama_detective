@@ -367,6 +367,7 @@ Based on this structured incident data, generate 5-7 specific investigation goal
 
 Guidelines:
 - Create goals that address the primary and secondary conflicts
+- The information gaps are good place to orient how to create the goals
 - Target specific actors and their relationships
 - Address information gaps flagged in missing_info
 - Consider the emotional states and atmosphere when framing goals

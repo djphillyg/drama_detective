@@ -14,8 +14,49 @@ class ApiError extends Error {
   }
 }
 
+// JWT token management
+const TOKEN_KEY = 'drama_detective_token';
+
+export const tokenManager = {
+  getToken(): string | null {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem(TOKEN_KEY);
+    }
+    return null;
+  },
+
+  setToken(token: string): void {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(TOKEN_KEY, token);
+    }
+  },
+
+  clearToken(): void {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem(TOKEN_KEY);
+    }
+  },
+
+  isAuthenticated(): boolean {
+    return !!this.getToken();
+  }
+};
+
 async function fetchWithErrorHandling(url: string, options: RequestInit) {
-  const response = await fetch(url, options);
+  // Add JWT token to headers if available
+  const token = tokenManager.getToken();
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string>),
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, {
+    ...options,
+    headers
+  });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
@@ -26,6 +67,21 @@ async function fetchWithErrorHandling(url: string, options: RequestInit) {
 }
 
 export const api = {
+  async verifyPassword(password: string): Promise<{ success: boolean; token: string }> {
+    const response = await fetchWithErrorHandling(`${API_BASE}/verify-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    });
+
+    // Store the token
+    if (response.token) {
+      tokenManager.setToken(response.token);
+    }
+
+    return response;
+  },
+
   async investigate(
     incidentName: string,
     summary: string,
