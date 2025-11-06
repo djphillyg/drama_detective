@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 import { useAppDispatch } from '@/store/hooks';
 import { startInvestigation } from '@/store/thunks/investigationThunks';
 import { generateIncidentName } from '@/lib/utils/incidentName';
@@ -22,23 +22,86 @@ export default function DeetsPage() {
   const [intervieweeName, setIntervieweeName] = useState('');
   const [relationship, setRelationship] = useState<RelationshipType>('participant');
   const [isLoading, setIsLoading] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // Limit to 5 images total
+    const remainingSlots = 5 - images.length;
+    if (remainingSlots <= 0) {
+      toast.error('Maximum 5 images allowed');
+      return;
+    }
+
+    const filesToProcess = Array.from(files).slice(0, remainingSlots);
+
+    try {
+      const newImages: string[] = [];
+      const newPreviews: string[] = [];
+
+      for (const file of filesToProcess) {
+        // Create preview URL
+        const previewUrl = URL.createObjectURL(file);
+        newPreviews.push(previewUrl);
+
+        // Convert to base64 for API
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = reader.result as string;
+            // Remove data URL prefix to get just base64
+            const base64Data = result.split(',')[1];
+            resolve(base64Data);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        newImages.push(base64);
+      }
+
+      setImages([...images, ...newImages]);
+      setImagePreviews([...imagePreviews, ...newPreviews]);
+    } catch (error) {
+      toast.error('Failed to process images');
+    }
+
+    // Reset input
+    e.target.value = '';
+  };
+
+  const handleRemoveImage = (index: number) => {
+    // Revoke object URL to prevent memory leak
+    URL.revokeObjectURL(imagePreviews[index]);
+
+    setImages(images.filter((_, i) => i !== index));
+    setImagePreviews(imagePreviews.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async () => {
-    if (summary.trim().length < 10) {
-      toast.error('Please provide at least 10 characters');
+    // Validate at least text (10+ chars) OR images provided
+    const hasValidText = summary.trim().length >= 10;
+    const hasImages = images.length > 0;
+
+    if (!hasValidText && !hasImages) {
+      toast.error('Please provide at least 10 characters or upload images');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const incidentName = generateIncidentName(summary);
+      const incidentName = generateIncidentName(summary || 'Image Upload');
 
       await dispatch(startInvestigation({
         incidentName,
         summary: summary.trim(),
         intervieweeName: intervieweeName.trim() || 'Anonymous',
-        relationship
+        relationship,
+        images
       })).unwrap();
 
       // Navigate to question page on success
@@ -79,6 +142,44 @@ export default function DeetsPage() {
               <p className="text-xs text-muted-foreground text-right">
                 {summary.length} characters
               </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="images">Add screenshots (optional)</Label>
+              <Input
+                id="images"
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageUpload}
+                disabled={images.length >= 5}
+              />
+              <p className="text-xs text-muted-foreground">
+                Upload up to 5 screenshots of text messages, social media posts, etc.
+              </p>
+
+              {imagePreviews.length > 0 && (
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  {imagePreviews.map((preview, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={preview}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-32 object-cover rounded border"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleRemoveImage(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -145,7 +246,7 @@ export default function DeetsPage() {
               size="lg"
               className="w-full min-h-touch text-lg"
               onClick={handleSubmit}
-              disabled={isLoading || summary.trim().length < 10}
+              disabled={isLoading || (summary.trim().length < 10 && images.length === 0)}
             >
               {isLoading ? 'Starting Detective...' : 'Start Detective'}
             </Button>
