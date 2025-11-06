@@ -40,7 +40,7 @@ export const api = {
         incident_name: incidentName,
         summary,
         interviewee_name: intervieweeName,
-        relationship,
+        interviewee_role: relationship,
         images: images || []
       }),
     });

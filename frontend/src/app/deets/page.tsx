@@ -130,21 +130,6 @@ export default function DeetsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="summary">Tell us what happened</Label>
-              <Textarea
-                id="summary"
-                placeholder="My friend Sarah texted me saying that Rob told her that Alex was talking about me behind my back, but when I asked Alex about it..."
-                value={summary}
-                onChange={(e) => setSummary(e.target.value)}
-                rows={8}
-                className="resize-none"
-              />
-              <p className="text-xs text-muted-foreground text-right">
-                {summary.length} characters
-              </p>
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="images">Add screenshots (optional)</Label>
               <Input
                 id="images"
@@ -180,6 +165,21 @@ export default function DeetsPage() {
                   ))}
                 </div>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="summary">Tell us what happened</Label>
+              <Textarea
+                id="summary"
+                placeholder="My friend Sarah texted me saying that Rob told her that Alex was talking about me behind my back, but when I asked Alex about it..."
+                value={summary}
+                onChange={(e) => setSummary(e.target.value)}
+                rows={8}
+                className="resize-none"
+              />
+              <p className="text-xs text-muted-foreground text-right">
+                {summary.length} characters
+              </p>
             </div>
 
             <div className="space-y-2">
