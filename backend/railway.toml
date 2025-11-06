@@ -1,6 +1,6 @@
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile.prod"
+dockerfilePath = "./Dockerfile.prod"
 
 [deploy]
 startCommand = "python3 src/api_server.py"
