@@ -1,4 +1,5 @@
 """Flask application factory."""
+import os
 from flask import Flask
 from flask_cors import CORS
 
@@ -8,7 +9,11 @@ def create_app():
     # CORS configuration
     CORS(app, resources={
         r"/api/*": {
-            "origins": ["http://localhost:3000", "https://drama-detective.railway.app"],
+            "origins": [
+                "http://localhost:3000",
+                "https://frontend-production-4e88.up.railway.app",
+                os.getenv("FRONTEND_URL", "")
+            ],
             "methods": ["GET", "POST", "OPTIONS"],
             "allow_headers": ["Content-Type"]
         }
