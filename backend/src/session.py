@@ -1,4 +1,5 @@
 import json
+import os
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -12,9 +13,19 @@ class SessionManager:
         # set data_dir
         # create directory if it doesnt exist
         if data_dir is None:
-            # Use project root directory (two levels up from this file)
-            project_root = Path(__file__).parent.parent.parent
-            self.data_dir = project_root / ".drama" / ".sessions"
+            # Check for environment variable first (for production)
+            env_data_dir = os.getenv("DATA_DIR")
+            if env_data_dir:
+                self.data_dir = Path(env_data_dir) / ".sessions"
+            else:
+                # Use /tmp in containerized environments, project root otherwise
+                # This prevents permission issues in Docker/Railway
+                project_root = Path(__file__).parent.parent.parent
+                # If project_root is /, use /tmp instead (Docker scenario)
+                if project_root == Path("/"):
+                    self.data_dir = Path("/tmp/.drama/.sessions")
+                else:
+                    self.data_dir = project_root / ".drama" / ".sessions"
         else:
             self.data_dir = Path(data_dir)
         self.data_dir.mkdir(parents=True, exist_ok=True)
