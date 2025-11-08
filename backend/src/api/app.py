@@ -15,7 +15,7 @@ def create_app():
                 os.getenv("FRONTEND_URL", "")
             ],
             "methods": ["GET", "POST", "OPTIONS"],
-            "allow_headers": ["Content-Type"]
+            "allow_headers": ["Content-Type", "Authorization"]
         }
     })
 
