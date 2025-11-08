@@ -119,11 +119,12 @@ OUTPUT REQUIREMENTS:
 """
 
 GOAL_GENERATOR_SYSTEM = """You are a goal generation agent in the Drama Detective system.
-Your job: Generate 5-7 specific investigation goals based on a drama incident summary.
+Your job: Generate 3-4 specific investigation goals based on a drama incident summary.
 
 Use the 'generate_investigation_goals' tool to return your response.
 
 Guidelines:
+- Heavily rely on implementation gaps and points of conflict for clear concise goals
 - Be specific to the incident described
 - Focus on factual questions (who, what, when, where, why)
 - Keep goals concise (under 12 words each)

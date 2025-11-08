@@ -72,14 +72,17 @@ def investigate(incident_name):
     console.print("  [bold]B)[/bold] I witnessed it happen")
     console.print("  [bold]C)[/bold] Someone told me about it")
     console.print("  [bold]D)[/bold] I'm friends with someone involved")
-
-    role_choice = Prompt.ask("Your answer", choices=["A", "B", "C", "D"])
+    console.print("  [bold]E)[/bold] Parasocial observer from reality tv")
+    console.print(". [bold]F)[/bold] Resident doctor hearing about nurse drama")
+    role_choice = Prompt.ask("Your answer", choices=["A", "B", "C", "D", "E", "F"])
 
     role_map = {
         "A": "participant",
         "B": "witness",
         "C": "secondhand",
-        "D": "friend"
+        "D": "friend",
+        "E": "parasocial observer from reality tv",
+        "F": "Resident doctor hearing about nurse drama"
     }
     interviewee_role = role_map[role_choice]
 
