@@ -112,7 +112,12 @@ def investigate(incident_name):
         return
     # Create SessionManager and new session
     session_manager = SessionManager()
-    session = session_manager.create_session(incident_name, interviewee_name, interviewee_role)
+    session = session_manager.create_session(
+        incident_name,
+        interviewee_name,
+        interviewee_role,
+        confidence_threshold=30
+    )
 
     # Store interviewee context in session
     session.interviewee_name = interviewee_name

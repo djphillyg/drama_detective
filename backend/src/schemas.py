@@ -16,8 +16,8 @@ GOAL_GENERATOR_SCHEMA = {
             "goals": {
                 "type": "array",
                 "items": {"type": "string"},
-                "minItems": 5,
-                "maxItems": 7
+                "minItems": 3,
+                "maxItems": 4
             }
         },
         "required": ["goals"]
@@ -169,7 +169,10 @@ SUMMARY_EXTRACTOR_SCHEMA = {
                         "type": "array",
                         "items": {"type": "string"}
                     },
-                    "emotional_atmosphere": {"type": "string"}
+                    "emotional_atmosphere": {
+                        "type": "string",
+                        "description": "Overall mood and tension level as a single descriptive string (e.g., 'tense and confrontational' or 'hurt, feelings of betrayal')"
+                    }
                 },
                 "required": ["timeline_markers", "location_context", "communication_history", "emotional_atmosphere"]
             },

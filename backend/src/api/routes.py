@@ -92,8 +92,9 @@ def investigate():
         summary: str = data.get("summary", "")
         interviewee_name = data["interviewee_name"]
         interviewee_role = data["interviewee_role"]
+        confidence_threshold = data.get("confidence_threshold", 90)  # Default to 90 if not provided
         images = data["images"]
-        
+
            # Process images into format for API client
         image_data_list = []
         if images:
@@ -121,7 +122,7 @@ def investigate():
 
         # create session
         session_manager: SessionManager = SessionManager()
-        session: Session = session_manager.create_session(incident_name, interviewee_name, interviewee_role)
+        session: Session = session_manager.create_session(incident_name, interviewee_name, interviewee_role, confidence_threshold)
 
         # initialize investigation
         orchestrator: InterviewOrchestrator = InterviewOrchestrator(session)

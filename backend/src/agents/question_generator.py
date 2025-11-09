@@ -21,6 +21,7 @@ class QuestionGeneratorAgent:
         session_id: Optional[str] = None,
         interviewee_name: str = "",
         interviewee_role: str = "",
+        confidence_threshold: int = 90,
     ) -> QuestionWithAnswers:
         # Calculate average confidence across goals
         avg_confidence = sum(g.confidence for g in goals) / len(goals) if goals else 0
@@ -54,8 +55,8 @@ class QuestionGeneratorAgent:
             use_cache=True
         )
 
-        # Override target_goal if investigation is nearly complete
-        if avg_confidence > 90:
+        # Override target_goal if investigation reaches user-specified confidence threshold
+        if avg_confidence > confidence_threshold:
             response["target_goal"] = "wrap_up"
 
         # Convert dict response to QuestionWithAnswers Pydantic model

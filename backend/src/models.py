@@ -140,6 +140,7 @@ class Session(BaseModel):
     extracted_summary: Union[ExtractedSummary, None] = None
     interviewee_name: str = ""
     interviewee_role: str = ""  # "participant", "witness", "secondhand", "friend"
+    confidence_threshold: int = Field(default=90, ge=20, le=95)  # Confidence level to end investigation
     goals: list[Goal] = Field(default_factory=list)
     messages: list[Message] = Field(default_factory=list)
     facts: list[Fact] = Field(default_factory=list)

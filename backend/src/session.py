@@ -31,7 +31,7 @@ class SessionManager:
         self.data_dir.mkdir(parents=True, exist_ok=True)
         pass
 
-    def create_session(self, incident_name: str, interviewee_name:str, interviewee_role: str) -> Session:
+    def create_session(self, incident_name: str, interviewee_name: str, interviewee_role: str, confidence_threshold: int = 90) -> Session:
         # TODO: Create Session with:
         #   - Random UUID for session_id
         #   - Current timestamp for created_at
@@ -41,6 +41,7 @@ class SessionManager:
             incident_name=incident_name,
             interviewee_name=interviewee_name,
             interviewee_role=interviewee_role,
+            confidence_threshold=confidence_threshold,
             created_at=datetime.now().isoformat(),
         )
         return session

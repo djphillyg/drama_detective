@@ -96,7 +96,7 @@ General Details:
 - Timeline markers: Extract any time references (yesterday, last week, 3 days ago, etc.)
 - Location context: Note places/spaces where drama occurred (party, group chat, work, etc.)
 - Communication history: What was said, what wasn't said, how information was shared
-- Emotional atmosphere: Overall mood and tension level
+- Emotional atmosphere: Overall mood and tension level (MUST be a single descriptive string, e.g., "tense and confrontational" or "hurt, feelings of betrayal")
 - For screenshots: Extract exact timestamps when visible, note platform (iMessage, WhatsApp, etc.)
 
 Missing Information:
@@ -176,6 +176,47 @@ Guidelines:
 - Mark status as "complete" when confidence >= 80
 - Provide brief reasoning for confidence changes
 - Consider both quantity and quality of information gathered
+"""
+
+FACT_AND_GOAL_UPDATE_SYSTEM = """You are a combined fact extraction and goal tracking agent in the Drama Detective system.
+Your job: Extract facts from the user's answer AND update investigation goal confidence scores in a single response.
+
+Use BOTH tools in your response:
+1. 'extract_facts' - Extract concrete facts from the answer
+2. 'update_goal_progress' - Update goal confidence based on those facts
+
+Guidelines for fact extraction:
+- Extract concrete, verifiable claims from the answer
+- Include temporal context (when did this happen?)
+- Note the topic area each fact addresses
+- Mark confidence level (certain vs uncertain)
+
+Guidelines for goal updates:
+- Increase confidence when new facts directly address a goal
+- Mark status as "complete" when confidence >= 80
+- Provide brief reasoning for confidence changes
+- Consider both quantity and quality of information gathered
+"""
+
+SUMMARY_AND_GOAL_GENERATION_SYSTEM = """You are a combined summary extraction and goal generation agent in the Drama Detective system.
+Your job: Parse raw drama descriptions into structured data AND generate investigation goals in a single response.
+
+Use BOTH tools in your response:
+1. 'extract_summary_structure' - Extract structured actors, conflicts, details, and gaps
+2. 'generate_investigation_goals' - Generate 3 specific investigation goals
+
+Guidelines for summary extraction:
+- Extract ALL mentioned individuals with full profile details
+- Identify primary and secondary conflicts
+- Note timeline markers, location context, and emotional atmosphere
+- Flag missing information or unclear details
+
+Guidelines for goal generation:
+- Heavily rely on the information gaps you identified for creating goals
+- Focus on primary and secondary conflicts
+- Create specific, actionable goals (under 12 words each)
+- Ensure goals are answerable through interview questions
+- Prioritize understanding motivations, timelines, and relationship dynamics
 """
 
 QUESTION_WITH_ANSWERS_SYSTEM = """You are a question and answer generation agent in the Drama Detective system.
@@ -303,6 +344,38 @@ Extract structured data from this drama summary. Analyze the text carefully to i
 
 Return only the JSON object, no additional text."""
 
+
+def build_summary_and_goals_prompt(raw_summary: str) -> str:
+    """
+    Build combined prompt for summary extraction AND goal generation in one API call.
+
+    Args:
+        raw_summary: User's free-form description of the drama
+
+    Returns:
+        Formatted prompt instructing model to use both tools
+    """
+    return f"""Raw drama summary from user:
+
+{raw_summary}
+
+TASK: Use BOTH tools in your response:
+
+1. First, use 'extract_summary_structure' to extract structured data
+   - Extract ALL mentioned individuals with full profile details
+   - Identify primary and secondary conflicts
+   - Note timeline markers, location context, and emotional atmosphere
+   - Flag missing information or unclear details
+
+2. Then, use 'generate_investigation_goals' to create 5-7 investigation goals
+   - Heavily rely on the information gaps you identified in the summary
+   - Focus on the primary and secondary conflicts
+   - Create specific, actionable goals (under 12 words each)
+   - Ensure goals are answerable through interview questions
+
+You MUST call both tools in your response."""
+
+
 def build_goal_generator_prompt(extracted_summary: ExtractedSummary) -> str:
     """
     Build prompt for goal generation with rich structured context.
@@ -424,6 +497,52 @@ Newly extracted facts:
 
 Update confidence scores for each goal based on these new facts.
 Return only the JSON array, no additional text."""
+
+
+def build_fact_and_goal_update_prompt(question: str, answer_obj: dict, goals: list) -> str:
+    """
+    Build combined prompt for fact extraction AND goal tracking in one API call.
+
+    Args:
+        question: The question that was asked
+        answer_obj: Dict with 'answer' and 'reasoning' keys from Answer model
+        goals: List of goal dicts with 'description', 'confidence', 'status'
+
+    Returns:
+        Formatted prompt instructing model to use both tools
+    """
+    goals_text = "\n".join(
+        [
+            f"- {g['description']} (current confidence: {g['confidence']}%)"
+            for g in goals
+        ]
+    )
+
+    return f"""Question asked: {question}
+
+User's selected answer:
+{{
+  "answer": "{answer_obj["answer"]}",
+  "reasoning": "{answer_obj["reasoning"]}"
+}}
+
+Current investigation goals:
+{goals_text}
+
+TASK: Use BOTH tools in your response:
+
+1. First, use 'extract_facts' to extract all concrete facts from the answer
+   - Extract only concrete claims, not speculation
+   - Include temporal context in the timestamp field
+   - Note the topic area each fact addresses
+   - Mark confidence level (certain vs uncertain)
+
+2. Then, use 'update_goal_progress' to update goal confidence based on those facts
+   - Increase confidence when new facts directly address a goal
+   - Mark status as "complete" when confidence >= 80
+   - Provide brief reasoning for confidence changes
+
+You MUST call both tools in your response."""
 
 
 def build_question_generator_prompt(
