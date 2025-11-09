@@ -116,7 +116,7 @@ def investigate(incident_name):
         incident_name,
         interviewee_name,
         interviewee_role,
-        confidence_threshold=30
+        confidence_threshold=60
     )
 
     # Store interviewee context in session

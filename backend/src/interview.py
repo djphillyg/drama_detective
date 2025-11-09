@@ -18,8 +18,8 @@ class InterviewOrchestrator:
         self.session: Session = session
         # Store session_id for context isolation
         self.session_id: str = session.session_id
-        # Initialize turn_count to 0
-        self.turn_count = 0
+        # Initialize turn_count from session to preserve state across requests
+        self.turn_count = session.turn_count
         # Initialize all agent instances
         self.claude_client = ClaudeClient()
         # Separate agents (for image-based summaries)
