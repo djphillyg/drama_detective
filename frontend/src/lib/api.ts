@@ -87,7 +87,8 @@ export const api = {
     summary: string,
     intervieweeName?: string,
     relationship?: string,
-    images?: string[]
+    images?: string[],
+    confidenceThreshold?: number
   ): Promise<InvestigateResponse> {
     return fetchWithErrorHandling(`${API_BASE}/investigate`, {
       method: 'POST',
@@ -97,7 +98,8 @@ export const api = {
         summary,
         interviewee_name: intervieweeName,
         interviewee_role: relationship,
-        images: images || []
+        images: images || [],
+        confidence_threshold: confidenceThreshold
       }),
     });
   },

@@ -13,6 +13,7 @@ import { startInvestigation } from '@/store/thunks/investigationThunks';
 import { generateIncidentName } from '@/lib/utils/incidentName';
 import { toast } from 'sonner';
 import { UploadIcon } from '@/components/UploadIcon';
+import { ConfidenceSlider } from '@/components/ConfidenceSlider';
 
 type RelationshipType = 'participant' | 'witness' | 'secondhand' | 'friend';
 
@@ -22,6 +23,7 @@ export default function DeetsPage() {
   const [summary, setSummary] = useState('');
   const [intervieweeName, setIntervieweeName] = useState('');
   const [relationship, setRelationship] = useState<RelationshipType>('participant');
+  const [confidenceThreshold, setConfidenceThreshold] = useState(60);
   const [isLoading, setIsLoading] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -170,7 +172,8 @@ export default function DeetsPage() {
         summary: summary.trim(),
         intervieweeName: intervieweeName.trim() || 'Anonymous',
         relationship,
-        images
+        images,
+        confidenceThreshold
       })).unwrap();
 
       // Navigate to question page on success
@@ -355,6 +358,13 @@ export default function DeetsPage() {
                       😈 Started it (No regrets)
                     </span>
                   </button>
+                </div>
+
+                <div className="mt-4">
+                  <ConfidenceSlider
+                    value={confidenceThreshold}
+                    onChange={setConfidenceThreshold}
+                  />
                 </div>
               </div>
             </div>
