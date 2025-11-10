@@ -83,6 +83,15 @@ export default function AnalysisPage() {
 
   const { timeline, key_facts, gaps, verdict } = analysisData;
 
+  // Helper to truncate text to half the sentences
+  const truncateToHalfSentences = (text: string): string => {
+    if (!text) return text;
+    // Split by sentence boundaries (., !, ?)
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+    const halfLength = Math.ceil(sentences.length / 2);
+    return sentences.slice(0, halfLength).join(' ');
+  };
+
   // Helper to get drama rating color
   const getDramaRatingColor = (rating: number) => {
     if (rating <= 3) return 'bg-green-500';
@@ -135,17 +144,17 @@ export default function AnalysisPage() {
             </div>
             <div>
               <h4 className="font-semibold text-sm mb-2">Reasoning</h4>
-              <p className="text-sm text-muted-foreground">{verdict.reasoning}</p>
+              <p className="text-sm text-muted-foreground">{truncateToHalfSentences(verdict.reasoning)}</p>
             </div>
             {verdict.contributing_factors && (
               <div>
                 <h4 className="font-semibold text-sm mb-2">Contributing Factors</h4>
-                <p className="text-sm text-muted-foreground">{verdict.contributing_factors}</p>
+                <p className="text-sm text-muted-foreground">{truncateToHalfSentences(verdict.contributing_factors)}</p>
               </div>
             )}
             <div>
               <h4 className="font-semibold text-sm mb-2">Drama Assessment</h4>
-              <p className="text-sm text-muted-foreground">{verdict.drama_rating_explanation}</p>
+              <p className="text-sm text-muted-foreground">{truncateToHalfSentences(verdict.drama_rating_explanation)}</p>
             </div>
           </div>
         </AnalysisSection>
@@ -172,7 +181,7 @@ export default function AnalysisPage() {
         {key_facts && key_facts.length > 0 && (
           <AnalysisSection title="Key Facts" icon="📋">
             <ul className="list-disc list-inside space-y-2">
-              {key_facts.map((fact, index) => (
+              {key_facts.slice(0, Math.ceil(key_facts.length / 2)).map((fact, index) => (
                 <li key={index} className="text-sm text-muted-foreground">
                   {fact}
                 </li>

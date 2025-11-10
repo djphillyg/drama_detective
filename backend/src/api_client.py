@@ -272,7 +272,7 @@ class ClaudeClient:
                     system=system,  # type: ignore
                     messages=[{"role": "user", "content": user_prompt}],
                     tools=tool_schemas,  # type: ignore
-                    # No tool_choice - let Claude decide to use multiple tools
+                    tool_choice={"type": "any"}  # Force at least one tool use
                 )
 
                 # Extract all tool uses from response
